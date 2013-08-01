@@ -1,6 +1,8 @@
-# Tcr
+# TCR (TCP + VCR)
 
-TCR is a lightweight VCR for TCP sockets.
+TCR is a *very* lightweight version of [VCR](https://github.com/vcr/vcr) for TCP sockets.
+
+Currently used for recording 'net/smtp' interactions so only a few of the TCPSocket methods are recorded out.
 
 ## Installation
 
@@ -38,7 +40,7 @@ class TCRTest < Test::Unit::TestCase
 end
 ```
 
-Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json. Run it again, and TCR will replay the interactions from google when the tcp request is made. This test is now fast (no real TCP requests are made anymore), deterministic and accurate.
+Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json. Run it again, and TCR will replay the interactions from json when the tcp request is made. This test is now fast (no real TCP requests are made anymore), deterministic and accurate.
 
 ## Contributing
 
