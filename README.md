@@ -24,6 +24,7 @@ require 'tcr'
 
 TCR.configure do |c|
   c.cassette_library_dir = 'fixtures/tcr_cassettes'
+  c.hook_tcp_ports = [25]
 end
 
 class TCRTest < Test::Unit::TestCase

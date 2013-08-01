@@ -5,7 +5,7 @@ require 'tcr/version'
 
 Gem::Specification.new do |gem|
   gem.name          = "tcr"
-  gem.version       = Tcr::VERSION
+  gem.version       = TCR::VERSION
   gem.authors       = ["Rob Forman"]
   gem.email         = ["rob@robforman.com"]
   gem.description   = %q{TCR is a lightweight VCR for TCP sockets.}
