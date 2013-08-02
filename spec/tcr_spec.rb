@@ -57,6 +57,12 @@ describe TCR do
       }.to raise_error(ArgumentError)
     end
 
+    it "resets the cassette after use" do
+      expect(TCR.cassette).to be_nil
+      TCR.use_cassette("test") { }
+      expect(TCR.cassette).to be_nil
+    end
+
     it "creates a cassette file on use" do
       expect {
         TCR.use_cassette("test") do
