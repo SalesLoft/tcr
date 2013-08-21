@@ -40,7 +40,20 @@ class TCRTest < Test::Unit::TestCase
 end
 ```
 
-Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json. Run it again, and TCR will replay the interactions from json when the tcp request is made. This test is now fast (no real TCP requests are made anymore), deterministic and accurate.
+Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json.
+
+```json
+[
+  [
+    [
+      "read",
+      "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+    ]
+  ]
+]
+```
+
+Run it again, and TCR will replay the interactions from json when the tcp request is made. This test is now fast (no real TCP requests are made anymore), deterministic and accurate.
 
 ## Contributing
 
