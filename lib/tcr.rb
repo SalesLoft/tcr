@@ -26,6 +26,14 @@ module TCR
     @cassette = v
   end
 
+  def disabled
+    @disabled || false
+  end
+
+  def disabled=(v)
+    @disabled = v
+  end
+
   def save_session
   end
 
@@ -34,6 +42,14 @@ module TCR
     TCR.cassette = Cassette.new(name)
     yield
     TCR.cassette = nil
+  end
+
+  def turned_off(&block)
+    raise ArgumentError, "`TCR.turned_off` requires a block." unless block
+    current_hook_tcp_ports = configuration.hook_tcp_ports
+    configuration.hook_tcp_ports = []
+    yield
+    configuration.hook_tcp_ports = current_hook_tcp_ports
   end
 end
 

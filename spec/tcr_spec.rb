@@ -18,7 +18,7 @@ describe TCR do
      end
    end
 
-   describe ".confige" do
+   describe ".configure" do
      it "configures cassette location" do
        expect {
          TCR.configure { |c| c.cassette_library_dir = "some/dir" }
@@ -38,6 +38,29 @@ describe TCR do
        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
      }.to raise_error(TCR::NoCassetteError)
    end
+
+  describe ".turned_off" do
+    it "requires a block to call" do
+      expect {
+        TCR.turned_off
+      }.to raise_error(ArgumentError)
+    end
+
+    it "disables hooks within the block" do
+      TCR.configure { |c| c.hook_tcp_ports = [25] }
+      TCR.turned_off do
+        TCR.configuration.hook_tcp_ports.should == []
+      end
+    end
+
+    it "makes real TCPSocket.open calls even when hooks are setup" do
+      TCR.configure { |c| c.hook_tcp_ports = [25] }
+      expect(TCPSocket).to receive(:real_open)
+      TCR.turned_off do
+        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+      end
+    end
+  end
 
   describe ".use_cassette" do
     before(:each) {
