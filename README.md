@@ -55,6 +55,14 @@ Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cas
 
 Run it again, and TCR will replay the interactions from json when the tcp request is made. This test is now fast (no real TCP requests are made anymore), deterministic and accurate.
 
+You can disable TCR hooking TCPSocket ports for a given block via `turned_off`:
+
+```ruby
+TCR.turned_off do
+  tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+end
+```
+
 ## Contributing
 
 1. Fork it
