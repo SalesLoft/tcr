@@ -1,15 +1,24 @@
 module TCR
   module Recordable
-    attr_reader :live
-    attr_accessor :recording, :cassette
+    attr_accessor :cassette
 
-    def setup_recordable(cassette)
-      @live = cassette.recording?
-      @recording = cassette.next_session
-      @cassette = cassette
+    def recording
+      @recording ||= cassette.next_session
+    end
+
+    def connect
+      recording.connect do
+        super
+      end
     end
 
     def read_nonblock(bytes)
+      recording.read do
+        super
+      end
+    end
+
+    def gets(*args)
       recording.read do
         super
       end
@@ -22,21 +31,13 @@ module TCR
     end
 
     def to_io
-      if live
+      if cassette.recording?
         super
-      end
-    end
-
-    def closed?
-      if live
-        super
-      else
-        false
       end
     end
 
     def close
-      if live
+      recording.close do
         super
       end
     end

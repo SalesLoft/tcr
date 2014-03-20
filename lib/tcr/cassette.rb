@@ -63,6 +63,18 @@ module TCR
         @live
       end
 
+      def gets
+        yield
+      end
+
+      def connect
+        yield
+      end
+
+      def close
+        yield
+      end
+
       def read
         if live
           data = yield

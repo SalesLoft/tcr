@@ -4,7 +4,7 @@ module TCR
       super
       if TCR.record_port?(port) && TCR.cassette
         extend(Recordable)
-        setup_recordable(TCR.cassette)
+        self.cassette = TCR.cassette
       end
     end
   end

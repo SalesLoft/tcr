@@ -7,7 +7,6 @@ require "tcr/version"
 require "socket"
 require "json"
 
-
 module TCR
   ALL_PORTS = '*'
 
