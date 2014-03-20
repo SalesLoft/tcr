@@ -55,32 +55,32 @@ module TCR
           @recording = []
         end
 
-        def connect
-          yield.tap do |success|
-            @recording << ["connect", success]
-          end
+        def connect(&block)
+          next_command('connect', &block)
         end
 
-        def close
-          yield.tap do |success|
-            @recording << ["close", success]
-          end
+        def close(&block)
+          next_command('close', &block)
         end
 
-        def read
-          yield.tap do |data|
-            @recording << ["read", data]
-          end
+        def read(&block)
+          next_command('read', &block)
         end
 
-        def write(str)
-          yield.tap do |len|
-            @recording << ["write", str]
-          end
+        def write(str, &block)
+          next_command('write', str, &block)
         end
 
         def as_json
           @recording
+        end
+
+        private
+
+        def next_command(command, *args, &block)
+          yield.tap do |return_value|
+            @recording << [command, return_value, *args]
+          end
         end
       end
     end
@@ -127,19 +127,18 @@ module TCR
         end
 
         def write(str)
-          data = next_command('write') do |data|
+          next_command('write') do |len, data|
             raise TCR::DataMismatchError.new("Expected to write '#{str}' but next data in recording was '#{data}'") unless str == data
           end
-          data.length
         end
 
         private
 
         def next_command(expected, expected_data=nil)
-          actual, data = @recording.shift
-          raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{actual}'") unless expected == actual
-          yield data if block_given?
-          data
+          command, return_value, *data = @recording.shift
+          raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{command}'") unless expected == command
+          yield return_value, *data if block_given?
+          return_value
         end
       end
     end

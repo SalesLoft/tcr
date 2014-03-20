@@ -6,6 +6,7 @@
     ],
     [
       "write",
+      16,
       "EHLO localhost\r\n"
     ],
     [
@@ -14,6 +15,7 @@
     ],
     [
       "write",
+      6,
       "QUIT\r\n"
     ],
     [
@@ -28,6 +30,7 @@
     ],
     [
       "write",
+      16,
       "EHLO localhost\r\n"
     ],
     [
@@ -36,6 +39,7 @@
     ],
     [
       "write",
+      6,
       "QUIT\r\n"
     ],
     [
