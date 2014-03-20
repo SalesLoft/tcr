@@ -40,7 +40,7 @@ module TCR
       def next_session
         session = sessions.shift
         raise NoMoreSessionsError unless session
-        Session.new(session, false)
+        Session.new(session)
       end
 
       def finish
@@ -52,6 +52,40 @@ module TCR
       def serialized_form
         raw = File.open(filename) { |f| f.read }
         JSON.parse(raw)
+      end
+
+      class Session
+        def initialize(recording)
+          @recording = recording
+        end
+
+        def connect
+          next_command('connect')
+        end
+
+        def close
+          next_command('close')
+        end
+
+        def read
+          next_command('read')
+        end
+
+        def write(str)
+          data = next_command('write') do |data|
+            raise TCR::DataMismatchError.new("Expected to write '#{str}' but next data in recording was '#{data}'") unless str == data
+          end
+          data.length
+        end
+
+        private
+
+        def next_command(expected, expected_data=nil)
+          actual, data = @recording.shift
+          raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{actual}'") unless expected == actual
+          yield data if block_given?
+          data
+        end
       end
     end
 
@@ -65,7 +99,7 @@ module TCR
       end
 
       def next_session
-        Session.new([], true).tap do |session|
+        Session.new.tap do |session|
           sessions << session
         end
       end
@@ -80,57 +114,39 @@ module TCR
       def serialized_form
         JSON.pretty_generate(sessions.map(&:as_json))
       end
-    end
 
-    class Session
-      def initialize(recording, live)
-        @live = live
-        @recording = recording
-      end
-
-      def live
-        @live
-      end
-
-      def gets
-        yield
-      end
-
-      def connect
-        yield
-      end
-
-      def close
-        yield
-      end
-
-      def read
-        if live
-          data = yield
-          @recording << ["read", data]
-        else
-          direction, data = @recording.shift
-          raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was 'write'") unless direction == "read"
+      class Session
+        def initialize
+          @recording = []
         end
 
-        data
-      end
-
-      def write(str)
-        if live
-          len = yield
-          @recording << ["write", str]
-        else
-          direction, data = @recording.shift
-          raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
-          len = data.length
+        def connect
+          yield.tap do |success|
+            @recording << ["connect", success]
+          end
         end
 
-        len
-      end
+        def close
+          yield.tap do |success|
+            @recording << ["close", success]
+          end
+        end
 
-      def as_json
-        @recording
+        def read
+          yield.tap do |data|
+            @recording << ["read", data]
+          end
+        end
+
+        def write(str)
+          yield.tap do |len|
+            @recording << ["write", str]
+          end
+        end
+
+        def as_json
+          @recording
+        end
       end
     end
   end

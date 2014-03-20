@@ -108,7 +108,7 @@ describe TCR do
           io = Net::InternetMessageIO.new(tcp_socket)
           io.write("hi")
         end
-      }.to raise_error(TCR::DirectionMismatchError)
+      }.to raise_error(TCR::CommandMismatchError)
     end
 
 
