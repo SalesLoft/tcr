@@ -9,6 +9,8 @@ require "json"
 
 
 module TCR
+  ALL_PORTS = '*'
+
   extend self
 
   def configure
@@ -35,11 +37,8 @@ module TCR
     @disabled = v
   end
 
-  def save_session
-  end
-
   def record_port?(port)
-    configuration.hook_tcp_ports.include?(port)
+    !disabled && configuration.hook_tcp_ports == ALL_PORTS || configuration.hook_tcp_ports.include?(port)
   end
 
   def use_cassette(name, options = {}, &block)
@@ -51,10 +50,12 @@ module TCR
 
   def turned_off(&block)
     raise ArgumentError, "`TCR.turned_off` requires a block." unless block
-    current_hook_tcp_ports = configuration.hook_tcp_ports
-    configuration.hook_tcp_ports = []
-    yield
-    configuration.hook_tcp_ports = current_hook_tcp_ports
+    begin
+      disabled = true
+      yield
+    ensure
+      disabled = false
+    end
   end
 end
 

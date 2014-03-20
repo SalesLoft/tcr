@@ -39,13 +39,6 @@ describe TCR do
       }.to raise_error(ArgumentError)
     end
 
-    it "disables hooks within the block" do
-      TCR.configure { |c| c.hook_tcp_ports = [25] }
-      TCR.turned_off do
-        TCR.configuration.hook_tcp_ports.should == []
-      end
-    end
-
     it "makes real TCPSocket.open calls even when hooks are setup" do
       TCR.configure { |c| c.hook_tcp_ports = [25] }
       TCR.turned_off do
