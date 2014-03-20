@@ -78,8 +78,8 @@ module TCR
           next_command('close', &block)
         end
 
-        def read(&block)
-          next_command('read', &block)
+        def read(*args, &block)
+          next_command('read', data: args, &block)
         end
 
         def write(str, &block)
@@ -95,7 +95,7 @@ module TCR
         def next_command(command, options={}, &block)
           yield.tap do |return_value|
             return_value = options[:ret] if options.has_key?(:ret)
-            @recording << [command, return_value] + [options[:data]].compact
+            @recording << [command, return_value] + Array(options[:data])
           end
         end
       end
@@ -146,8 +146,10 @@ module TCR
           next_command('close')
         end
 
-        def read
-          next_command('read')
+        def read(*args)
+          next_command('read') do |str, *data|
+            raise TCR::DataMismatchError.new("Expected to read to be called with args '#{args.inspect}' but was called with '#{data.inspect}'") unless args == data
+          end
         end
 
         def write(str)
@@ -165,7 +167,7 @@ module TCR
         def next_command(expected)
           command, return_value, data = @recording.shift
           raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{command}'") unless expected == command
-          yield return_value, data if block_given?
+          yield return_value, *data if block_given?
           return_value
         end
       end
