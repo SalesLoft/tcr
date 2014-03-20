@@ -75,7 +75,7 @@ module TCR
         end
 
         def as_json
-          @recording
+          {"recording" => @recording}
         end
 
         private
@@ -113,8 +113,8 @@ module TCR
       end
 
       class Session
-        def initialize(recording)
-          @recording = recording
+        def initialize(raw)
+          @recording = raw["recording"]
         end
 
         def connect
