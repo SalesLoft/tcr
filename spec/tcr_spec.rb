@@ -32,13 +32,6 @@ describe TCR do
      end
    end
 
-   it "raises an error if you connect to a hooked port without using a cassette" do
-     TCR.configure { |c| c.hook_tcp_ports = [25] }
-     expect {
-       tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
-     }.to raise_error(TCR::NoCassetteError)
-   end
-
   describe ".turned_off" do
     it "requires a block to call" do
       expect {
@@ -55,9 +48,9 @@ describe TCR do
 
     it "makes real TCPSocket.open calls even when hooks are setup" do
       TCR.configure { |c| c.hook_tcp_ports = [25] }
-      expect(TCPSocket).to receive(:real_open)
       TCR.turned_off do
         tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        expect(tcp_socket).not_to respond_to(:cassette)
       end
     end
   end
@@ -107,10 +100,9 @@ describe TCR do
     end
 
     it "plays back tcp sessions without opening a real connection" do
-      expect(TCPSocket).to_not receive(:real_open)
-
       TCR.use_cassette("spec/fixtures/google_smtp") do
         tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        expect(tcp_socket).to respond_to(:cassette)
         io = Net::InternetMessageIO.new(tcp_socket)
         line = io.readline.should include("220 mx.google.com ESMTP")
       end

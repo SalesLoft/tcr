@@ -1,7 +1,8 @@
 require "tcr/cassette"
 require "tcr/configuration"
 require "tcr/errors"
-require "tcr/recordable_tcp_socket"
+require "tcr/socket_extension"
+require "tcr/recordable"
 require "tcr/version"
 require "socket"
 require "json"
@@ -37,6 +38,10 @@ module TCR
   def save_session
   end
 
+  def record_port?(port)
+    configuration.hook_tcp_ports.include?(port)
+  end
+
   def use_cassette(name, options = {}, &block)
     raise ArgumentError, "`TCR.use_cassette` requires a block." unless block
     TCR.cassette = Cassette.new(name)
@@ -53,18 +58,4 @@ module TCR
   end
 end
 
-
-# The monkey patch shim
-class TCPSocket
-  class << self
-    alias_method :real_open,  :open
-
-    def open(address, port)
-      if TCR.configuration.hook_tcp_ports.include?(port)
-        TCR::RecordableTCPSocket.new(address, port, TCR.cassette)
-      else
-        real_open(address, port)
-      end
-    end
-  end
-end
+TCPSocket.prepend(TCR::SocketExtension)

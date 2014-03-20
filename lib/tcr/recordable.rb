@@ -1,14 +1,11 @@
 module TCR
-  class RecordableTCPSocket
-    attr_reader :live, :cassette
-    attr_accessor :recording
+  module Recordable
+    attr_reader :live
+    attr_accessor :recording, :cassette
 
-    def initialize(address, port, cassette)
-      raise TCR::NoCassetteError.new unless TCR.cassette
-
+    def setup_recordable(cassette)
       if cassette.recording?
         @live = true
-        @socket = TCPSocket.real_open(address, port)
         @recording = []
       else
         @live = false
@@ -19,7 +16,7 @@ module TCR
 
     def read_nonblock(bytes)
       if live
-        data = @socket.read_nonblock(bytes)
+        data = super
         recording << ["read", data]
       else
         direction, data = recording.shift
@@ -31,7 +28,7 @@ module TCR
 
     def write(str)
       if live
-        len = @socket.write(str)
+        len = super
         recording << ["write", str]
       else
         direction, data = recording.shift
@@ -44,13 +41,13 @@ module TCR
 
     def to_io
       if live
-        @socket.to_io
+        super
       end
     end
 
     def closed?
       if live
-        @socket.closed?
+        super
       else
         false
       end
@@ -58,7 +55,7 @@ module TCR
 
     def close
       if live
-        @socket.close
+        super
         cassette.append(recording)
       end
     end
