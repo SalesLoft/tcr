@@ -30,12 +30,6 @@ module TCR
       end
     end
 
-    def to_io
-      if cassette.recording?
-        super
-      end
-    end
-
     def close
       recording.close do
         super
