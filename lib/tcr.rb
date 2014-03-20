@@ -45,7 +45,7 @@ module TCR
     raise ArgumentError, "`TCR.use_cassette` requires a block." unless block
     begin
       TCR.cassette = Cassette.new(name)
-      yield
+      yield TCR.cassette
     ensure
       TCR.cassette.finish
       TCR.cassette = nil
