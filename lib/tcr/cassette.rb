@@ -2,6 +2,10 @@ module TCR
   class Cassette
     attr_reader :name
 
+    def self.build(name)
+      new(name)
+    end
+
     def initialize(name)
       @name = name
       @recording = !File.exists?(filename)
