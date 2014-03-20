@@ -29,6 +29,13 @@ module TCR
     end
 
     class RecordingCassette < Cassette
+      attr_reader :originally_recorded_at
+
+      def initialize(*args)
+        super
+        @originally_recorded_at = Time.now
+      end
+
       def sessions
         @sessions ||= []
       end
@@ -48,6 +55,7 @@ module TCR
 
       def serialized_form
         raw = {
+          "originally_recorded_at" => originally_recorded_at,
           'sessions' => sessions.map(&:as_json)
         }
         JSON.pretty_generate(raw)
@@ -91,6 +99,10 @@ module TCR
     class RecordedCassette < Cassette
       def sessions
         @sessions ||= serialized_form['sessions']
+      end
+
+      def originally_recorded_at
+        serialized_form['originally_recorded_at']
       end
 
       def next_session
