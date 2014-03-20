@@ -4,13 +4,8 @@ module TCR
     attr_accessor :recording, :cassette
 
     def setup_recordable(cassette)
-      if cassette.recording?
-        @live = true
-        @recording = []
-      else
-        @live = false
-        @recording = cassette.next_session
-      end
+      @live = cassette.recording?
+      @recording = cassette.next_session
       @cassette = cassette
     end
 
