@@ -162,7 +162,7 @@ module TCR
 
         private
 
-        def next_command(expected, expected_data=nil)
+        def next_command(expected)
           command, return_value, data = @recording.shift
           raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{command}'") unless expected == command
           yield return_value, data if block_given?
