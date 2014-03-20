@@ -9,6 +9,7 @@ require "json"
 
 module TCR
   ALL_PORTS = '*'
+  SOCKET_CLASSES = [TCPSocket, OpenSSL::SSL::SSLSocket]
 
   extend self
 
@@ -62,4 +63,4 @@ module TCR
   end
 end
 
-TCPSocket.prepend(TCR::SocketExtension)
+TCR::SOCKET_CLASSES.each{|klass|klass.prepend(TCR::SocketExtension)}
