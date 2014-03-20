@@ -61,6 +61,10 @@ module TCR
         JSON.pretty_generate(raw)
       end
 
+      def empty?
+        true
+      end
+
       class Session
         def initialize
           @recording = []
@@ -99,7 +103,7 @@ module TCR
 
     class RecordedCassette < Cassette
       def sessions
-        @sessions ||= serialized_form['sessions']
+        @sessions ||= serialized_form['sessions'].map{|raw| Session.new(raw)}
       end
 
       def originally_recorded_at
@@ -109,11 +113,15 @@ module TCR
       def next_session
         session = sessions.shift
         raise NoMoreSessionsError unless session
-        Session.new(session)
+        session
       end
 
       def finish
         # no-op
+      end
+
+      def empty?
+        sessions.all?(&:empty?)
       end
 
       private
@@ -146,6 +154,10 @@ module TCR
           next_command('write') do |len, data|
             raise TCR::DataMismatchError.new("Expected to write '#{str}' but next data in recording was '#{data}'") unless str == data
           end
+        end
+
+        def empty?
+          @recording.empty?
         end
 
         private
