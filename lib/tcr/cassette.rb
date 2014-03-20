@@ -47,7 +47,10 @@ module TCR
       private
 
       def serialized_form
-        JSON.pretty_generate(sessions.map(&:as_json))
+        raw = {
+          'sessions' => sessions.map(&:as_json)
+        }
+        JSON.pretty_generate(raw)
       end
 
       class Session
@@ -87,7 +90,7 @@ module TCR
 
     class RecordedCassette < Cassette
       def sessions
-        @sessions ||= serialized_form
+        @sessions ||= serialized_form['sessions']
       end
 
       def next_session

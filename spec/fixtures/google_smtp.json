@@ -1,8 +1,10 @@
-[
-  [
+{
+  "sessions": [
     [
-      "read",
-      "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+      [
+        "read",
+        "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+      ]
     ]
   ]
-]
+}

@@ -1,50 +1,52 @@
-[
-  [
+{
+  "sessions": [
     [
-      "read",
-      "220 mx.google.com ESMTP d8si2472149qai.124 - gsmtp\r\n"
+      [
+        "read",
+        "220 mx.google.com ESMTP d8si2472149qai.124 - gsmtp\r\n"
+      ],
+      [
+        "write",
+        16,
+        "EHLO localhost\r\n"
+      ],
+      [
+        "read",
+        "250-mx.google.com at your service, [54.227.243.167]\r\n250-SIZE 35882577\r\n250-8BITMIME\r\n250-STARTTLS\r\n250 ENHANCEDSTATUSCODES\r\n"
+      ],
+      [
+        "write",
+        6,
+        "QUIT\r\n"
+      ],
+      [
+        "read",
+        "221 2.0.0 closing connection d8si2472149qai.124 - gsmtp\r\n"
+      ]
     ],
     [
-      "write",
-      16,
-      "EHLO localhost\r\n"
-    ],
-    [
-      "read",
-      "250-mx.google.com at your service, [54.227.243.167]\r\n250-SIZE 35882577\r\n250-8BITMIME\r\n250-STARTTLS\r\n250 ENHANCEDSTATUSCODES\r\n"
-    ],
-    [
-      "write",
-      6,
-      "QUIT\r\n"
-    ],
-    [
-      "read",
-      "221 2.0.0 closing connection d8si2472149qai.124 - gsmtp\r\n"
-    ]
-  ],
-  [
-    [
-      "read",
-      "220 mta1579.mail.gq1.yahoo.com ESMTP YSmtpProxy service ready\r\n"
-    ],
-    [
-      "write",
-      16,
-      "EHLO localhost\r\n"
-    ],
-    [
-      "read",
-      "250-mta1579.mail.gq1.yahoo.com\r\n250-8BITMIME\r\n250-SIZE 41943040\r\n250 PIPELINING\r\n"
-    ],
-    [
-      "write",
-      6,
-      "QUIT\r\n"
-    ],
-    [
-      "read",
-      "221 mta1579.mail.gq1.yahoo.com\r\n"
+      [
+        "read",
+        "220 mta1579.mail.gq1.yahoo.com ESMTP YSmtpProxy service ready\r\n"
+      ],
+      [
+        "write",
+        16,
+        "EHLO localhost\r\n"
+      ],
+      [
+        "read",
+        "250-mta1579.mail.gq1.yahoo.com\r\n250-8BITMIME\r\n250-SIZE 41943040\r\n250 PIPELINING\r\n"
+      ],
+      [
+        "write",
+        6,
+        "QUIT\r\n"
+      ],
+      [
+        "read",
+        "221 mta1579.mail.gq1.yahoo.com\r\n"
+      ]
     ]
   ]
-]
+}
