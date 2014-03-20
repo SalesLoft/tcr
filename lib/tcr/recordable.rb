@@ -10,28 +10,15 @@ module TCR
     end
 
     def read_nonblock(bytes)
-      if live
-        data = super
-        recording << ["read", data]
-      else
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was 'write'") unless direction == "read"
+      recording.read do
+        super
       end
-
-      data
     end
 
     def write(str)
-      if live
-        len = super
-        recording << ["write", str]
-      else
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
-        len = data.length
+      recording.write(str) do
+        super
       end
-
-      len
     end
 
     def to_io

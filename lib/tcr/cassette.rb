@@ -21,11 +21,11 @@ module TCR
 
     def next_session
       if recording?
-        Session.new([])
+        Session.new([], true)
       else
         session = @sessions.shift
         raise NoMoreSessionsError unless session
-        Session.new(session)
+        Session.new(session, false)
       end
     end
 
@@ -42,16 +42,38 @@ module TCR
     end
 
     class Session
-      def initialize(recording)
+      def initialize(recording, live)
+        @live = live
         @recording = recording
       end
 
-      def <<(value)
-        @recording << value
+      def live
+        @live
       end
 
-      def shift
-        @recording.shift
+      def read
+        if live
+          data = yield
+          @recording << ["read", data]
+        else
+          direction, data = @recording.shift
+          raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was 'write'") unless direction == "read"
+        end
+
+        data
+      end
+
+      def write(str)
+        if live
+          len = yield
+          @recording << ["write", str]
+        else
+          direction, data = @recording.shift
+          raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
+          len = data.length
+        end
+
+        len
       end
 
       def as_json
