@@ -28,74 +28,9 @@ module TCR
       self.class.filename(name)
     end
 
-    class RecordedCassette < Cassette
-      def sessions
-        @sessions ||= serialized_form
-      end
-
-      def recording?
-        false
-      end
-
-      def next_session
-        session = sessions.shift
-        raise NoMoreSessionsError unless session
-        Session.new(session)
-      end
-
-      def finish
-        # no-op
-      end
-
-      private
-
-      def serialized_form
-        raw = File.open(filename) { |f| f.read }
-        JSON.parse(raw)
-      end
-
-      class Session
-        def initialize(recording)
-          @recording = recording
-        end
-
-        def connect
-          next_command('connect')
-        end
-
-        def close
-          next_command('close')
-        end
-
-        def read
-          next_command('read')
-        end
-
-        def write(str)
-          data = next_command('write') do |data|
-            raise TCR::DataMismatchError.new("Expected to write '#{str}' but next data in recording was '#{data}'") unless str == data
-          end
-          data.length
-        end
-
-        private
-
-        def next_command(expected, expected_data=nil)
-          actual, data = @recording.shift
-          raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{actual}'") unless expected == actual
-          yield data if block_given?
-          data
-        end
-      end
-    end
-
     class RecordingCassette < Cassette
       def sessions
         @sessions ||= []
-      end
-
-      def recording?
-        true
       end
 
       def next_session
@@ -146,6 +81,65 @@ module TCR
 
         def as_json
           @recording
+        end
+      end
+    end
+
+    class RecordedCassette < Cassette
+      def sessions
+        @sessions ||= serialized_form
+      end
+
+      def next_session
+        session = sessions.shift
+        raise NoMoreSessionsError unless session
+        Session.new(session)
+      end
+
+      def finish
+        # no-op
+      end
+
+      private
+
+      def serialized_form
+        @serialized_form ||= begin
+          raw = File.open(filename) { |f| f.read }
+          JSON.parse(raw)
+        end
+      end
+
+      class Session
+        def initialize(recording)
+          @recording = recording
+        end
+
+        def connect
+          next_command('connect')
+        end
+
+        def close
+          next_command('close')
+        end
+
+        def read
+          next_command('read')
+        end
+
+        def write(str)
+          data = next_command('write') do |data|
+            raise TCR::DataMismatchError.new("Expected to write '#{str}' but next data in recording was '#{data}'") unless str == data
+          end
+          data.length
+        end
+
+        private
+
+        def next_command(expected, expected_data=nil)
+          actual, data = @recording.shift
+          raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{actual}'") unless expected == actual
+          yield data if block_given?
+          data
         end
       end
     end
