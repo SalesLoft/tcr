@@ -67,7 +67,7 @@ module TCR
         end
 
         def connect(&block)
-          next_command('connect', &block)
+          next_command('connect', ret: nil, &block)
         end
 
         def close(&block)
@@ -79,7 +79,7 @@ module TCR
         end
 
         def write(str, &block)
-          next_command('write', str, &block)
+          next_command('write', data: str, &block)
         end
 
         def as_json
@@ -88,9 +88,10 @@ module TCR
 
         private
 
-        def next_command(command, *args, &block)
+        def next_command(command, options={}, &block)
           yield.tap do |return_value|
-            @recording << [command, return_value, *args]
+            return_value = options[:ret] if options.has_key?(:ret)
+            @recording << [command, return_value] + [options[:data]].compact
           end
         end
       end
@@ -150,9 +151,9 @@ module TCR
         private
 
         def next_command(expected, expected_data=nil)
-          command, return_value, *data = @recording.shift
+          command, return_value, data = @recording.shift
           raise TCR::CommandMismatchError.new("Expected to '#{expected}' but next in recording was '#{command}'") unless expected == command
-          yield return_value, *data if block_given?
+          yield return_value, data if block_given?
           return_value
         end
       end
