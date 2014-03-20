@@ -38,7 +38,6 @@ module TCR
     def close
       if live
         super
-        cassette.append(recording)
       end
     end
   end

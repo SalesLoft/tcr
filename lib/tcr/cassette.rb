@@ -4,14 +4,14 @@ module TCR
 
     def initialize(name)
       @name = name
+      @recording = !File.exists?(filename)
+    end
 
-      if File.exists?(filename)
-        @recording = false
-        @contents = File.open(filename) { |f| f.read }
-        @sessions = JSON.parse(@contents)
+    def sessions
+      @sessions ||= if recording?
+        []
       else
-        @recording = true
-        @sessions = []
+        read_serialized_form
       end
     end
 
@@ -21,21 +21,33 @@ module TCR
 
     def next_session
       if recording?
-        Session.new([], true)
+        Session.new([], true).tap do |session|
+          sessions << session
+        end
       else
-        session = @sessions.shift
+        session = sessions.shift
         raise NoMoreSessionsError unless session
         Session.new(session, false)
       end
     end
 
-    def append(session)
-      raise "Can't append session unless recording" unless recording?
-      @sessions << session.as_json
-      File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+    def finish
+      if recording?
+        FileUtils.mkdir_p(File.dirname(filename))
+        File.open(filename, "w") { |f| f.write(serialized_form) }
+      end
     end
 
     protected
+
+    def read_serialized_form
+      raw = File.open(filename) { |f| f.read }
+      JSON.parse(raw)
+    end
+
+    def serialized_form
+      JSON.pretty_generate(sessions.map(&:as_json))
+    end
 
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.json"
