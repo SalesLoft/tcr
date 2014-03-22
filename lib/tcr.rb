@@ -1,13 +1,16 @@
 require "tcr/cassette"
 require "tcr/configuration"
 require "tcr/errors"
-require "tcr/recordable_tcp_socket"
+require "tcr/socket_extension"
+require "tcr/recordable"
 require "tcr/version"
 require "socket"
 require "json"
 
-
 module TCR
+  ALL_PORTS = '*'
+  SOCKET_CLASSES = [TCPSocket, OpenSSL::SSL::SSLSocket]
+
   extend self
 
   def configure
@@ -34,37 +37,30 @@ module TCR
     @disabled = v
   end
 
-  def save_session
+  def record_port?(port)
+    !disabled && configuration.hook_tcp_ports == ALL_PORTS || configuration.hook_tcp_ports.include?(port)
   end
 
   def use_cassette(name, options = {}, &block)
     raise ArgumentError, "`TCR.use_cassette` requires a block." unless block
-    TCR.cassette = Cassette.new(name)
-    yield
-    TCR.cassette = nil
+    begin
+      TCR.cassette = Cassette.build(name)
+      yield TCR.cassette
+    ensure
+      TCR.cassette.finish
+      TCR.cassette = nil
+    end
   end
 
   def turned_off(&block)
     raise ArgumentError, "`TCR.turned_off` requires a block." unless block
-    current_hook_tcp_ports = configuration.hook_tcp_ports
-    configuration.hook_tcp_ports = []
-    yield
-    configuration.hook_tcp_ports = current_hook_tcp_ports
-  end
-end
-
-
-# The monkey patch shim
-class TCPSocket
-  class << self
-    alias_method :real_open,  :open
-
-    def open(address, port)
-      if TCR.configuration.hook_tcp_ports.include?(port)
-        TCR::RecordableTCPSocket.new(address, port, TCR.cassette)
-      else
-        real_open(address, port)
-      end
+    begin
+      disabled = true
+      yield
+    ensure
+      disabled = false
     end
   end
 end
+
+TCR::SOCKET_CLASSES.each{|klass|klass.prepend(TCR::SocketExtension)}
