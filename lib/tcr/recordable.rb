@@ -30,6 +30,12 @@ module TCR
       end
     end
 
+    def read(*args)
+      recording.read do
+        super
+      end
+    end
+
     def close
       recording.close do
         super
