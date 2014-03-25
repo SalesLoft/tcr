@@ -1,6 +1,6 @@
 module TCR
   class TCRError < StandardError; end
-  class NoCassetteError < TCRError; end
   class NoMoreSessionsError < TCRError; end
-  class DirectionMismatchError < TCRError; end
+  class CommandMismatchError < TCRError; end
+  class DataMismatchError < TCRError; end
 end
