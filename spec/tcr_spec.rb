@@ -1,7 +1,9 @@
 require "spec_helper"
 require "tcr"
 require "net/protocol"
+require "net/http"
 require "net/smtp"
+
 
 describe TCR do
   before(:each) do
@@ -126,6 +128,16 @@ describe TCR do
       }.to raise_error(TCR::DirectionMismatchError)
     end
 
+    it "supports ssl sockets" do
+      TCR.configure { |c| c.hook_tcp_ports = [443] }
+      http = Net::HTTP.new("www.google.com", 443)
+      http.use_ssl = true
+      expect {
+        TCR.use_cassette("spec/fixtures/google_https") do
+          http.request(Net::HTTP::Get.new("/"))
+        end
+      }.not_to raise_error
+    end
 
     context "multiple connections" do
       it "records multiple sessions per cassette" do

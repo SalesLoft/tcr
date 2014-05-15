@@ -59,11 +59,23 @@ class TCPSocket
   class << self
     alias_method :real_open,  :open
 
-    def open(address, port)
+    def open(address, port, *args)
       if TCR.configuration.hook_tcp_ports.include?(port)
         TCR::RecordableTCPSocket.new(address, port, TCR.cassette)
       else
         real_open(address, port)
+      end
+    end
+  end
+end
+
+class OpenSSL::SSL::SSLSocket
+  class << self
+    def new(io, *args)
+      if TCR::RecordableTCPSocket === io
+        TCR::RecordableSSLSocket.new(io)
+      else
+        super
       end
     end
   end

@@ -1,3 +1,7 @@
+require 'delegate'
+require 'openssl'
+
+
 module TCR
   class RecordableTCPSocket
     attr_reader :live, :cassette
@@ -22,6 +26,7 @@ module TCR
         data = @socket.read_nonblock(bytes)
         recording << ["read", data]
       else
+        raise EOFError if recording.empty?
         direction, data = recording.shift
         raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was 'write'") unless direction == "read"
       end
@@ -61,6 +66,45 @@ module TCR
         @socket.close
         cassette.append(recording)
       end
+    end
+
+    private
+
+    def _intercept_socket
+      if @socket
+        @socket = yield @socket
+      end
+    end
+  end
+
+  class RecordableSSLSocket < SimpleDelegator
+    def initialize(tcr_socket)
+      super(tcr_socket)
+      tcr_socket.send(:_intercept_socket) do |sock|
+        socket = OpenSSL::SSL::SSLSocket.new(sock, OpenSSL::SSL::SSLContext.new)
+        socket.sync_close = true
+        socket.connect
+        socket
+      end
+    end
+
+    def sync_close=(arg)
+      true
+    end
+
+    def session
+      self
+    end
+
+    def session=(args)
+    end
+
+    def connect
+      self
+    end
+
+    def post_connection_check(*args)
+      true
     end
   end
 end
