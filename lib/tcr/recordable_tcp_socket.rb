@@ -24,6 +24,10 @@ module TCR
       @cassette = cassette
     end
 
+    def read(bytes)
+      _read(:read, bytes)
+    end
+
     def gets(*args)
       _read(:gets, *args)
     end
