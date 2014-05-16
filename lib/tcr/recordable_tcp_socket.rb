@@ -25,55 +25,20 @@ module TCR
     end
 
     def gets(*args)
-      if live
-          data = @socket.gets(*args)
-          recording << ["read", data]
-      else
-        _block_for_read_data if TCR.configuration.block_for_reads
-        raise EOFError if recording.empty?
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was '#{direction}'") unless direction == "read"
-      end
-
-      data
+      _read(:gets, *args)
     end
 
     def read_nonblock(bytes)
-      if live
-        data = @socket.read_nonblock(bytes)
-        recording << ["read", data]
-      else
-        raise EOFError if recording.empty?
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was 'write'") unless direction == "read"
-      end
-
-      data
+      _read(:read_nonblock, bytes, blocking: false)
     end
 
     def print(str)
-      if live
-        @socket.print(str)
-        recording << ["write", str]
-      else
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
-        _check_for_blocked_reads
-      end
+      _write(:print, str)
     end
 
     def write(str)
-      if live
-        len = @socket.write(str)
-        recording << ["write", str]
-      else
-        direction, data = recording.shift
-        raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
-        len = data.length
-        _check_for_blocked_reads
-      end
-
-      len
+      _write(:write, str)
+      str.length
     end
 
     def to_io
@@ -113,6 +78,34 @@ module TCR
 
     def _check_for_blocked_reads
       @read_lock << 1
+    end
+
+    def _write(method, data)
+      if live
+        @socket.__send__(method, data)
+        recording << ["write", data]
+      else
+        direction, data = recording.shift
+        _ensure_direction("write", direction)
+        _check_for_blocked_reads
+      end
+    end
+
+    def _read(method, *args, blocking: true)
+      if live
+          data = @socket.__send__(method, *args)
+          recording << ["read", data]
+      else
+        _block_for_read_data if blocking && TCR.configuration.block_for_reads
+        raise EOFError if recording.empty?
+        direction, data = recording.shift
+        _ensure_direction("read", direction)
+      end
+      data
+    end
+
+    def _ensure_direction(desired, actual)
+      raise TCR::DirectionMismatchError.new("Expected to '#{desired}' but next in recording was '#{actual}'") unless desired == actual
     end
   end
 
