@@ -1,14 +1,17 @@
 require 'delegate'
 require 'openssl'
+require 'thread'
 
 
 module TCR
   class RecordableTCPSocket
-    attr_reader :live, :cassette
+    attr_reader :live, :cassette, :socket
     attr_accessor :recording
 
     def initialize(address, port, cassette)
       raise TCR::NoCassetteError.new unless TCR.cassette
+
+      @read_lock = Queue.new
 
       if cassette.recording?
         @live = true
@@ -19,6 +22,20 @@ module TCR
         @recording = cassette.next_session
       end
       @cassette = cassette
+    end
+
+    def gets(*args)
+      if live
+          data = @socket.gets(*args)
+          recording << ["read", data]
+      else
+        _block_for_read_data if TCR.configuration.block_for_reads
+        raise EOFError if recording.empty?
+        direction, data = recording.shift
+        raise TCR::DirectionMismatchError.new("Expected to 'read' but next in recording was '#{direction}'") unless direction == "read"
+      end
+
+      data
     end
 
     def read_nonblock(bytes)
@@ -34,6 +51,17 @@ module TCR
       data
     end
 
+    def print(str)
+      if live
+        @socket.print(str)
+        recording << ["write", str]
+      else
+        direction, data = recording.shift
+        raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
+        _check_for_blocked_reads
+      end
+    end
+
     def write(str)
       if live
         len = @socket.write(str)
@@ -42,6 +70,7 @@ module TCR
         direction, data = recording.shift
         raise TCR::DirectionMismatchError.new("Expected to 'write' but next in recording was 'read'") unless direction == "write"
         len = data.length
+        _check_for_blocked_reads
       end
 
       len
@@ -75,6 +104,16 @@ module TCR
         @socket = yield @socket
       end
     end
+
+    def _block_for_read_data
+      while recording.first && recording.first.first != "read"
+        @read_lock.pop
+      end
+    end
+
+    def _check_for_blocked_reads
+      @read_lock << 1
+    end
   end
 
   class RecordableSSLSocket < SimpleDelegator
@@ -97,6 +136,17 @@ module TCR
     end
 
     def session=(args)
+    end
+
+    def io
+      self
+    end
+
+    def shutdown
+      if live
+        socket.io.shutdown
+        cassette.append(recording)
+      end
     end
 
     def connect

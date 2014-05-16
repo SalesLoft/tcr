@@ -1,0 +1,92 @@
+[
+  [
+    [
+      "read",
+      "* OK Gimap ready for requests from 72.16.218.22 n58mb218005052yhi\r\n"
+    ],
+    [
+      "write",
+      "RUBY0001 LOGIN"
+    ],
+    [
+      "write",
+      " "
+    ],
+    [
+      "write",
+      "ben.olive@example.net"
+    ],
+    [
+      "write",
+      " "
+    ],
+    [
+      "write",
+      "password"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "read",
+      "* CAPABILITY IMAP4rev1 UNSELECT IDLE NAMESPACE QUOTA ID XLIST CHILDREN X-GM-EXT-1 UIDPLUS COMPRESS=DEFLATE ENABLE MOVE CONDSTORE ESEARCH\r\n"
+    ],
+    [
+      "read",
+      "RUBY0001 OK ben.olive@example.net Ben Olive authenticated (Success)\r\n"
+    ],
+    [
+      "write",
+      "RUBY0002 EXAMINE"
+    ],
+    [
+      "write",
+      " "
+    ],
+    [
+      "write",
+      "INBOX"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "read",
+      "* FLAGS (\\Answered \\Flagged \\Draft \\Deleted \\Seen $Phishing $NotPhishing)\r\n"
+    ],
+    [
+      "read",
+      "* OK [PERMANENTFLAGS ()] Flags permitted.\r\n"
+    ],
+    [
+      "read",
+      "* OK [UIDVALIDITY 1] UIDs valid.\r\n"
+    ],
+    [
+      "read",
+      "* 206 EXISTS\r\n"
+    ],
+    [
+      "read",
+      "* 0 RECENT\r\n"
+    ],
+    [
+      "read",
+      "* OK [UIDNEXT 5504] Predicted next UID.\r\n"
+    ],
+    [
+      "read",
+      "* OK [HIGHESTMODSEQ 609503]\r\n"
+    ],
+    [
+      "read",
+      "RUBY0002 OK [READ-ONLY] INBOX selected. (Success)\r\n"
+    ],
+    [
+      "read",
+      null
+    ]
+  ]
+]
