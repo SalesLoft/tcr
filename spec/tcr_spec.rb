@@ -1,7 +1,11 @@
 require "spec_helper"
 require "tcr"
 require "net/protocol"
+require "net/http"
+require "net/imap"
 require "net/smtp"
+require 'thread'
+
 
 describe TCR do
   before(:each) do
@@ -16,6 +20,10 @@ describe TCR do
      it "has an empty list of hook ports by default" do
        TCR.configuration.hook_tcp_ports.should == []
      end
+
+     it "defaults to erroring on read/write mismatch access" do
+       TCR.configuration.block_for_reads.should be_false
+     end
    end
 
    describe ".configure" do
@@ -29,6 +37,12 @@ describe TCR do
        expect {
          TCR.configure { |c| c.hook_tcp_ports = [25] }
        }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([25])
+     end
+
+     it "configures allowing a blocking read mode" do
+       expect {
+         TCR.configure { |c| c.block_for_reads = true }
+       }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
      end
    end
 
@@ -58,6 +72,44 @@ describe TCR do
       expect(TCPSocket).to receive(:real_open)
       TCR.turned_off do
         tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+      end
+    end
+  end
+
+  describe "block_for_reads" do
+    before(:each) {
+      TCR.configure { |c|
+        c.hook_tcp_ports = [9999]
+        c.cassette_library_dir = '.'
+      }
+    }
+
+    it "blocks read thread until data is available instead of raising mismatch error" do
+      TCR.configure { |c| c.block_for_reads = true }
+      reads = Queue.new
+
+      TCR.use_cassette("spec/fixtures/block_for_reads") do
+        sock = TCPSocket.open("google.com", 9999)
+
+        t = Thread.new do
+          reads << sock.gets
+        end
+
+        expect(reads.size).to eq(0)
+        sock.print("hello\n")
+        t.value
+        expect(reads.size).to eq(1)
+      end
+    end
+
+    context "when disabled" do
+      it "raises mismatch error" do
+        TCR.use_cassette("spec/fixtures/block_for_reads") do
+          sock = TCPSocket.open("google.com", 9999)
+          expect {
+            Timeout::timeout(1) { sock.gets }
+          }.to raise_error(TCR::DirectionMismatchError)
+        end
       end
     end
   end
@@ -126,6 +178,42 @@ describe TCR do
       }.to raise_error(TCR::DirectionMismatchError)
     end
 
+    it "stubs out Socket#gets" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [993]
+        c.block_for_reads = true
+      }
+      expect {
+        TCR.use_cassette("spec/fixtures/google_imap") do
+          conn = Net::IMAP.new("imap.gmail.com", 993, true)
+          conn.login("ben.olive@example.net", "password")
+          conn.examine(Net::IMAP.encode_utf7("INBOX"))
+          conn.disconnect
+        end
+      }.not_to raise_error
+    end
+
+    it "stubs out Socket#read" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [23]
+      }
+      TCR.use_cassette("spec/fixtures/starwars_telnet") do
+        sock = TCPSocket.open("towel.blinkenlights.nl", 23)
+        expect(sock.read(50).length).to eq(50)
+        sock.close
+      end
+    end
+
+    it "supports ssl sockets" do
+      TCR.configure { |c| c.hook_tcp_ports = [443] }
+      http = Net::HTTP.new("www.google.com", 443)
+      http.use_ssl = true
+      expect {
+        TCR.use_cassette("spec/fixtures/google_https") do
+          http.request(Net::HTTP::Get.new("/"))
+        end
+      }.not_to raise_error
+    end
 
     context "multiple connections" do
       it "records multiple sessions per cassette" do

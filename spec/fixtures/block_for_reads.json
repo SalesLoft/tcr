@@ -1,0 +1,12 @@
+[
+  [
+    [
+      "write",
+      "hello\n"
+    ],
+    [
+      "read",
+      "world!\n"
+    ]
+  ]
+]
