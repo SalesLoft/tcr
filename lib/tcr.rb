@@ -1,15 +1,15 @@
 require "tcr/cassette"
 require "tcr/configuration"
 require "tcr/errors"
-require "tcr/socket_extension"
 require "tcr/recordable"
+require "tcr/socket_extension"
+require "tcr/ssl_socket_extension"
 require "tcr/version"
 require "socket"
 require "json"
 
 module TCR
   ALL_PORTS = '*'
-  SOCKET_CLASSES = [TCPSocket, OpenSSL::SSL::SSLSocket]
 
   extend self
 
@@ -63,4 +63,5 @@ module TCR
   end
 end
 
-TCR::SOCKET_CLASSES.each{|klass|klass.prepend(TCR::SocketExtension)}
+TCPSocket.prepend(TCR::SocketExtension)
+OpenSSL::SSL::SSLSocket.send(:include, TCR::SSLSocketExtension)
