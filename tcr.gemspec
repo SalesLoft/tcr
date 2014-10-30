@@ -4,10 +4,10 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'tcr/version'
 
 Gem::Specification.new do |gem|
-  gem.name          = "tcr"
+  gem.name          = "shopify-tcr"
   gem.version       = TCR::VERSION
-  gem.authors       = ["Rob Forman"]
-  gem.email         = ["rob@robforman.com"]
+  gem.authors       = ["Luke Hutscal"]
+  gem.email         = 'luke.hutscal@shopify.com'
   gem.description   = %q{TCR is a lightweight VCR for TCP sockets.}
   gem.summary       = %q{TCR is a lightweight VCR for TCP sockets.}
   gem.homepage      = ""
