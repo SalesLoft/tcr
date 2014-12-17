@@ -20,15 +20,19 @@ module TCR
     end
 
     def next_session
-      session = @sessions.shift
-      raise NoMoreSessionsError unless session
-      session
+      if recording?
+        @sessions << []
+        @sessions.last
+      else
+        raise NoMoreSessionsError if @sessions.empty?
+        @sessions.shift
+      end
     end
 
-    def append(session)
-      raise "Can't append session unless recording" unless recording?
-      @sessions << session
-      File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+    def save
+      if recording?
+        File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+      end
     end
 
     protected

@@ -12,6 +12,12 @@ describe TCR do
     TCR.configuration.reset_defaults!
   end
 
+  around(:each) do |example|
+    File.unlink("test.json") if File.exists?("test.json")
+    example.run
+    File.unlink("test.json") if File.exists?("test.json")
+  end
+
   describe ".configuration" do
      it "has a default cassette location configured" do
        TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
@@ -120,10 +126,6 @@ describe TCR do
         c.hook_tcp_ports = [25]
         c.cassette_library_dir = "."
       }
-      File.unlink("test.json") if File.exists?("test.json")
-    }
-    after(:each) {
-      File.unlink("test.json") if File.exists?("test.json")
     }
 
     it "requires a block to call" do
@@ -142,7 +144,6 @@ describe TCR do
       expect {
         TCR.use_cassette("test") do
           tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
-          tcp_socket.close
         end
       }.to change{ File.exists?("./test.json") }.from(false).to(true)
     end
@@ -237,6 +238,35 @@ describe TCR do
           tcp_socket = TCPSocket.open("mta6.am0.yahoodns.net", 25)
           io = Net::InternetMessageIO.new(tcp_socket)
           line = io.readline.should include("yahoo.com ESMTP")
+        end
+      end
+
+      context "when a cassette is recorded with connections opens concurrently" do
+        let(:ports) { ["Apple", "Banana"].map { |payload| spawn_server(payload) } }
+        before(:each) do
+          TCR.configure { |c|
+            c.hook_tcp_ports = ports
+            c.cassette_library_dir = "."
+          }
+        end
+        before(:each) do
+          TCR.use_cassette("test") do
+            apple = TCPSocket.open("127.0.0.1", ports.first)
+            banana = TCPSocket.open("127.0.0.1", ports.last)
+
+            banana.gets
+            apple.gets
+
+            banana.close
+            apple.close
+          end
+        end
+
+        it "replays the sessions in the order they were created" do
+          TCR.use_cassette("test") do
+            apple = TCPSocket.open("127.0.0.1", ports.first)
+            expect(apple.gets).to eq("Apple")
+          end
         end
       end
 

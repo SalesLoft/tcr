@@ -5,7 +5,7 @@ require 'thread'
 
 module TCR
   class RecordableTCPSocket
-    attr_reader :live, :cassette, :socket
+    attr_reader :live, :socket
     attr_accessor :recording
 
     def initialize(address, port, cassette)
@@ -16,12 +16,10 @@ module TCR
       if cassette.recording?
         @live = true
         @socket = TCPSocket.real_open(address, port)
-        @recording = []
       else
         @live = false
-        @recording = cassette.next_session
       end
-      @cassette = cassette
+      @recording = cassette.next_session
     end
 
     def read(bytes)
@@ -62,7 +60,6 @@ module TCR
     def close
       if live
         @socket.close
-        cassette.append(recording)
       end
     end
 
@@ -142,7 +139,6 @@ module TCR
     def shutdown
       if live
         socket.io.shutdown
-        cassette.append(recording)
       end
     end
 
