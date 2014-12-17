@@ -1,5 +1,8 @@
 # TCR (TCP + VCR)
 
+[![Build Status](https://travis-ci.org/robforman/tcr.png?branch=master)](https://travis-ci.org/robforman/tcr)
+
+
 TCR is a *very* lightweight version of [VCR](https://github.com/vcr/vcr) for TCP sockets.
 
 Currently used for recording 'net/smtp' interactions so only a few of the TCPSocket methods are recorded out.
