@@ -3,6 +3,20 @@
 # Require this file using `require "spec_helper"` to ensure that it is only
 # loaded once.
 #
+module SpawnTestServers
+  # Spawn a new server that will send the specified payload when connected to.
+  # The listening port number will be returned
+  def spawn_server(payload)
+    server = TCPServer.new("127.0.0.1", 0)
+    fork do
+      client = server.accept
+      client.write(payload)
+      client.close
+    end
+    server.addr[1]
+  end
+end
+
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true
@@ -14,4 +28,6 @@ RSpec.configure do |config|
   # the seed, which is printed after each run.
   #     --seed 1234
   config.order = 'random'
+
+  config.include(SpawnTestServers)
 end

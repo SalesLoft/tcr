@@ -16,11 +16,10 @@ module TCR
       if cassette.recording?
         @live = true
         @socket = TCPSocket.real_open(address, port)
-        @recording = []
       else
         @live = false
-        @recording = cassette.next_session
       end
+      @recording = cassette.next_session
       @cassette = cassette
     end
 
