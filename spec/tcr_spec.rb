@@ -144,7 +144,6 @@ describe TCR do
       expect {
         TCR.use_cassette("test") do
           tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
-          tcp_socket.close
         end
       }.to change{ File.exists?("./test.json") }.from(false).to(true)
     end

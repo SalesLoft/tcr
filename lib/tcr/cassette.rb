@@ -29,10 +29,10 @@ module TCR
       end
     end
 
-    def append(session)
-      raise "Can't append session unless recording" unless recording?
-      @sessions << session
-      File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+    def save
+      if recording?
+        File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+      end
     end
 
     protected
