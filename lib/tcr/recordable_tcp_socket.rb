@@ -63,6 +63,9 @@ module TCR
       end
     end
 
+    def setsockopt(*args)
+    end
+
     private
 
     def _intercept_socket
