@@ -30,6 +30,10 @@ describe TCR do
      it "defaults to erroring on read/write mismatch access" do
        TCR.configuration.block_for_reads.should be_falsey
      end
+
+     it "defaults to JSON" do
+       TCR.configuration.format.should == :json
+     end
    end
 
    describe ".configure" do
@@ -37,6 +41,12 @@ describe TCR do
        expect {
          TCR.configure { |c| c.cassette_library_dir = "some/dir" }
        }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
+     end
+
+     it "configures cassette format" do
+       expect {
+         TCR.configure { |c| c.format = :yaml }
+       }.to change{ TCR.configuration.format }.from(:json).to(:yaml)
      end
 
      it "configures tcp ports to hook" do
