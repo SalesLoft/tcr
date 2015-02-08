@@ -1,0 +1,7 @@
+---
+- - - write
+    - |
+      hello
+  - - read
+    - |
+      world!

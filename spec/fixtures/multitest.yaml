@@ -1,0 +1,5 @@
+---
+- - - read
+    - "220 mx.google.com ESMTP h5si2286277qec.54 - gsmtp\r\n"
+- - - read
+    - "220 mta1009.mail.gq1.yahoo.com ESMTP YSmtpProxy service ready\r\n"

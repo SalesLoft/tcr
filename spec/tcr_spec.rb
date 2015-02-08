@@ -12,12 +12,6 @@ describe TCR do
     TCR.configuration.reset_defaults!
   end
 
-  around(:each) do |example|
-    File.unlink("test.json") if File.exists?("test.json")
-    example.run
-    File.unlink("test.json") if File.exists?("test.json")
-  end
-
   describe ".configuration" do
      it "has a default cassette location configured" do
        TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
@@ -28,7 +22,11 @@ describe TCR do
      end
 
      it "defaults to erroring on read/write mismatch access" do
-       TCR.configuration.block_for_reads.should be_false
+       TCR.configuration.block_for_reads.should be_falsey
+     end
+
+     it "defaults to JSON" do
+       TCR.configuration.recording_format.should == :json
      end
    end
 
@@ -37,6 +35,12 @@ describe TCR do
        expect {
          TCR.configure { |c| c.cassette_library_dir = "some/dir" }
        }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
+     end
+
+     it "configures cassette format" do
+       expect {
+         TCR.configure { |c| c.recording_format = :yaml }
+       }.to change{ TCR.configuration.recording_format }.from(:json).to(:yaml)
      end
 
      it "configures tcp ports to hook" do
@@ -120,13 +124,19 @@ describe TCR do
     end
   end
 
-  describe ".use_cassette" do
+  shared_examples "a cassette" do
     before(:each) {
       TCR.configure { |c|
         c.hook_tcp_ports = [25]
         c.cassette_library_dir = "."
       }
     }
+
+    around(:each) do |example|
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+      example.run
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+    end
 
     it "requires a block to call" do
       expect {
@@ -141,22 +151,25 @@ describe TCR do
     end
 
     it "creates a cassette file on use" do
+      TCR.configure { |c| c.hook_tcp_ports = [25] }
       expect {
         TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+          tcp_socket = TCPSocket.open("google.com", 80)
         end
-      }.to change{ File.exists?("./test.json") }.from(false).to(true)
+      }.to change{ File.exists?(test_file_name) }.from(false).to(true)
     end
 
     it "records the tcp session data into the file" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
       TCR.use_cassette("test") do
-        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        tcp_socket = TCPSocket.open("google.com", 80)
         io = Net::InternetMessageIO.new(tcp_socket)
+        io.write("GET /\n")
         line = io.readline
         tcp_socket.close
       end
-      cassette_contents = File.open("test.json") { |f| f.read }
-      cassette_contents.include?("220 mx.google.com ESMTP").should == true
+      cassette_contents = File.open(test_file_name) { |f| f.read }
+      cassette_contents.include?("HTTP/1.0 200 OK").should == true
     end
 
     it "plays back tcp sessions without opening a real connection" do
@@ -218,15 +231,14 @@ describe TCR do
 
     context "multiple connections" do
       it "records multiple sessions per cassette" do
+        TCR.configure { |c| c.hook_tcp_ports = [80] }
         TCR.use_cassette("test") do
-          smtp = Net::SMTP.start("aspmx.l.google.com", 25)
-          smtp.finish
-          smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
-          smtp.finish
+          Net::HTTP.get("google.com", "/")
+          Net::HTTP.get("yahoo.com", "/")
         end
-        cassette_contents = File.open("test.json") { |f| f.read }
-        cassette_contents.include?("google.com ESMTP").should == true
-        cassette_contents.include?("yahoo.com ESMTP").should == true
+        cassette_contents = File.open(test_file_name) { |f| f.read }
+        cassette_contents.include?("Host: google.com").should == true
+        cassette_contents.include?("Host: yahoo.com").should == true
       end
 
       it "plays back multiple sessions per cassette in order" do
@@ -279,6 +291,100 @@ describe TCR do
           end
         }.to raise_error(TCR::NoMoreSessionsError)
       end
+    end
+  end
+
+  shared_examples "a binary compatible cassette" do
+    before(:each) {
+      TCR.configure { |c|
+        c.hook_tcp_ports = [25]
+        c.cassette_library_dir = "."
+      }
+    }
+
+    around(:each) do |example|
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+      example.run
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+    end
+
+    it "handles recording binary data properly" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
+      TCR.use_cassette("test") do
+        uri = URI("http://c.cyberciti.biz/cbzcache/3rdparty/terminal.png")
+        data = Net::HTTP.get(uri)
+      end
+      cassette_contents = File.open(test_file_name) { |f| f.read }
+      cassette_contents.include?("User-Agent: Ruby").should == true
+    end
+
+    it "handles reading binary data properly" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
+      TCR.use_cassette("spec/fixtures/binary_data") do
+        uri = URI("http://c.cyberciti.biz/cbzcache/3rdparty/terminal.png")
+        data = Net::HTTP.get(uri)
+        data.include?("PNG").should == true
+      end
+    end
+  end
+
+  describe "a JSON cassette" do
+    let(:test_file_name) { "test.json" }
+    # we default to JSON so no need to specify recording_format
+
+    it_behaves_like "a cassette"
+  end
+
+  describe "a YAML cassette" do
+    let(:test_file_name) { "test.yaml" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :yaml
+      end
+    end
+
+    it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
+  end
+
+  describe "a BSON cassette" do
+    let(:test_file_name) { "test.bson" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :bson
+      end
+    end
+
+    it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
+  end
+
+  describe "a msgpack cassette" do
+    let(:test_file_name) { "test.msgpack" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :msgpack
+      end
+    end
+
+    it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
+  end
+
+  describe "an invalid format cassette" do
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :foobar
+      end
+    end
+
+    it "raises an error" do
+      expect {
+        TCR.use_cassette("test") {}
+      }.to raise_error(TCR::FormatError)
     end
   end
 end
