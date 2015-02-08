@@ -325,6 +325,18 @@ describe TCR do
     it_behaves_like "a cassette"
   end
 
+  describe "a msgpack cassette" do
+    let(:test_file_name) { "test.msgpack" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :msgpack
+      end
+    end
+
+    it_behaves_like "a cassette"
+  end
+
   describe "an invalid format cassette" do
     before(:each) do
       TCR.configure do |c|

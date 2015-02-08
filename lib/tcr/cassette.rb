@@ -42,6 +42,8 @@ module TCR
         YAMLCassette.new(name)
       elsif recording_format == :bson
         BSONCassette.new(name)
+      elsif recording_format == :msgpack
+        MsgpackCassette.new(name)
       else
         raise TCR::FormatError.new
       end
@@ -93,6 +95,22 @@ module TCR
 
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.bson"
+    end
+  end
+
+  class MsgpackCassette < Cassette
+    def parse
+      MessagePack.unpack(@contents)
+    end
+
+    def dump
+      @sessions.to_msgpack
+    end
+
+    protected
+
+    def filename
+      "#{TCR.configuration.cassette_library_dir}/#{name}.msgpack"
     end
   end
 end

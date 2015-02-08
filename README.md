@@ -115,7 +115,7 @@ TCR accepts the following configuration parameters:
 * **cassette_library_directory**: the directory, relative to your current directory, to save and read recordings from
 * **hook_tcp_ports**: the TCP ports that will be intercepted for recording and playback
 * **block_for_reads**: when reading data from a cassette, whether TCR should wait for matching "write" data to be written to the socket before allowing a read
-* **recording_format**: the format of the cassettes.  Can be :json, :yaml, or :bson
+* **recording_format**: the format of the cassettes.  Can be :json, :yaml, :bson, or :msgpack
 
 ## Contributing
 

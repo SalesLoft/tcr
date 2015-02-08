@@ -7,6 +7,7 @@ require "socket"
 require "json"
 require "yaml"
 require "bson"
+require "msgpack"
 
 
 module TCR
