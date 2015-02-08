@@ -294,12 +294,7 @@ describe TCR do
 
   describe "a JSON cassette" do
     let(:test_file_name) { "test.json" }
-
-    before(:each) do
-      TCR.configure do |c|
-        c.recording_format = :json
-      end
-    end
+    # we default to JSON so no need to specify recording_format
 
     it_behaves_like "a cassette"
   end
