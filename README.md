@@ -75,7 +75,7 @@ end
 ```
 
 ### SMTP
-You can use TCR to record any TCP interaction.  Here we record the handshake with an SMTP server.  **Note that many residential ISPs block port 25 outbound, so this may not work for you.**
+You can use TCR to record any TCP interaction.  Here we record the start of an SMTP session.  **Note that many residential ISPs block port 25 outbound, so this may not work for you.**
 
 ```ruby
 require 'test/unit'
