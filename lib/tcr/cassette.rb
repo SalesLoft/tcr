@@ -84,15 +84,31 @@ module TCR
 
   class BSONCassette < Cassette
     def parse
-      Array.from_bson(StringIO.new(@contents))
+      data = Array.from_bson(StringIO.new(@contents))
+      self.class.debinaryize(data)
     end
 
     def dump
-      @sessions.to_bson
+      self.class.binaryize(@sessions).to_bson
+    end
+
+    def self.binaryize(data)
+      if Array === data
+        data.map { |item| binaryize(item) }
+      elsif String === data
+        BSON::Binary.new(data)
+      end
+    end
+
+    def self.debinaryize(data)
+      if Array === data
+        data.map { |item| debinaryize(item) }
+      elsif BSON::Binary === data
+        data.data
+      end
     end
 
     protected
-
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.bson"
     end
