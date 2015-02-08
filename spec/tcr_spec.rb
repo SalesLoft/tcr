@@ -151,22 +151,25 @@ describe TCR do
     end
 
     it "creates a cassette file on use" do
+      TCR.configure { |c| c.hook_tcp_ports = [25] }
       expect {
         TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+          tcp_socket = TCPSocket.open("google.com", 80)
         end
       }.to change{ File.exists?(test_file_name) }.from(false).to(true)
     end
 
     it "records the tcp session data into the file" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
       TCR.use_cassette("test") do
-        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        tcp_socket = TCPSocket.open("google.com", 80)
         io = Net::InternetMessageIO.new(tcp_socket)
+        io.write("GET /\n")
         line = io.readline
         tcp_socket.close
       end
       cassette_contents = File.open(test_file_name) { |f| f.read }
-      cassette_contents.include?("220 mx.google.com ESMTP").should == true
+      cassette_contents.include?("HTTP/1.0 200 OK").should == true
     end
 
     it "plays back tcp sessions without opening a real connection" do
@@ -228,15 +231,14 @@ describe TCR do
 
     context "multiple connections" do
       it "records multiple sessions per cassette" do
+        TCR.configure { |c| c.hook_tcp_ports = [80] }
         TCR.use_cassette("test") do
-          smtp = Net::SMTP.start("aspmx.l.google.com", 25)
-          smtp.finish
-          smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
-          smtp.finish
+          Net::HTTP.get("google.com", "/")
+          Net::HTTP.get("yahoo.com", "/")
         end
         cassette_contents = File.open(test_file_name) { |f| f.read }
-        cassette_contents.include?("google.com ESMTP").should == true
-        cassette_contents.include?("yahoo.com ESMTP").should == true
+        cassette_contents.include?("Host: google.com").should == true
+        cassette_contents.include?("Host: yahoo.com").should == true
       end
 
       it "plays back multiple sessions per cassette in order" do
