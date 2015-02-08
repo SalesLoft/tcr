@@ -8,7 +8,7 @@ module TCR
       if File.exists?(filename)
         @recording = false
         @contents = File.open(filename) { |f| f.read }
-        @sessions = JSON.parse(@contents)
+        @sessions = parse
       else
         @recording = true
         @sessions = []
@@ -31,14 +31,50 @@ module TCR
 
     def save
       if recording?
-        File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+        File.open(filename, "w") { |f| f.write(dump) }
       end
+    end
+
+    def self.get_cassette(name, format)
+      if format == :json
+        JSONCassette.new(name)
+      elsif format == :yaml
+        YAMLCassette.new(name)
+      else
+        raise TCR::FormatError.new
+      end
+    end
+  end
+
+  class JSONCassette < Cassette
+    def parse
+      JSON.parse(@contents)
+    end
+
+    def dump
+      JSON.pretty_generate(@sessions)
     end
 
     protected
 
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.json"
+    end
+  end
+
+  class YAMLCassette < Cassette
+    def parse
+      YAML.load(@contents)
+    end
+
+    def dump
+      YAML.dump(@sessions)
+    end
+
+    protected
+
+    def filename
+      "#{TCR.configuration.cassette_library_dir}/#{name}.yaml"
     end
   end
 end

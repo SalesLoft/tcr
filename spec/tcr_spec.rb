@@ -12,12 +12,6 @@ describe TCR do
     TCR.configuration.reset_defaults!
   end
 
-  around(:each) do |example|
-    File.unlink("test.json") if File.exists?("test.json")
-    example.run
-    File.unlink("test.json") if File.exists?("test.json")
-  end
-
   describe ".configuration" do
      it "has a default cassette location configured" do
        TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
@@ -130,13 +124,19 @@ describe TCR do
     end
   end
 
-  describe ".use_cassette" do
+  shared_examples "a cassette" do
     before(:each) {
       TCR.configure { |c|
         c.hook_tcp_ports = [25]
         c.cassette_library_dir = "."
       }
     }
+
+    around(:each) do |example|
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+      example.run
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+    end
 
     it "requires a block to call" do
       expect {
@@ -155,7 +155,7 @@ describe TCR do
         TCR.use_cassette("test") do
           tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
         end
-      }.to change{ File.exists?("./test.json") }.from(false).to(true)
+      }.to change{ File.exists?(test_file_name) }.from(false).to(true)
     end
 
     it "records the tcp session data into the file" do
@@ -165,7 +165,7 @@ describe TCR do
         line = io.readline
         tcp_socket.close
       end
-      cassette_contents = File.open("test.json") { |f| f.read }
+      cassette_contents = File.open(test_file_name) { |f| f.read }
       cassette_contents.include?("220 mx.google.com ESMTP").should == true
     end
 
@@ -234,7 +234,7 @@ describe TCR do
           smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
           smtp.finish
         end
-        cassette_contents = File.open("test.json") { |f| f.read }
+        cassette_contents = File.open(test_file_name) { |f| f.read }
         cassette_contents.include?("google.com ESMTP").should == true
         cassette_contents.include?("yahoo.com ESMTP").should == true
       end
@@ -289,6 +289,44 @@ describe TCR do
           end
         }.to raise_error(TCR::NoMoreSessionsError)
       end
+    end
+  end
+
+  describe "a JSON cassette" do
+    let(:test_file_name) { "test.json" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.format = :json
+      end
+    end
+
+    it_behaves_like "a cassette"
+  end
+
+  describe "a YAML cassette" do
+    let(:test_file_name) { "test.yaml" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.format = :yaml
+      end
+    end
+
+    it_behaves_like "a cassette"
+  end
+
+  describe "an invalid format cassette" do
+    before(:each) do
+      TCR.configure do |c|
+        c.format = :foobar
+      end
+    end
+
+    it "raises an error" do
+      expect {
+        TCR.use_cassette("test") {}
+      }.to raise_error(TCR::FormatError)
     end
   end
 end
