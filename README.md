@@ -27,6 +27,7 @@ Or install it yourself as:
 
 ## Usage
 
+### HTTP
 ```ruby
 require 'test/unit'
 require 'tcr'
@@ -73,6 +74,7 @@ TCR.turned_off do
 end
 ```
 
+### SMTP
 You can use TCR to record any TCP interaction.  Here we record the handshake with an SMTP server.  **Note that many residential ISPs block port 25 outbound, so this may not work for you.**
 
 ```ruby
