@@ -28,7 +28,7 @@ describe TCR do
      end
 
      it "defaults to erroring on read/write mismatch access" do
-       TCR.configuration.block_for_reads.should be_false
+       TCR.configuration.block_for_reads.should be_falsey
      end
    end
 
