@@ -73,6 +73,41 @@ TCR.turned_off do
 end
 ```
 
+You can use TCR to record any TCP interaction.  Here we record the handshake with an SMTP server.  **Note that many residential ISPs block port 25 outbound, so this may not work for you.**
+
+```ruby
+require 'test/unit'
+require 'tcr'
+
+TCR.configure do |c|
+  c.cassette_library_dir = 'fixtures/tcr_cassettes'
+  c.hook_tcp_ports = [25]
+end
+
+class TCRTest < Test::Unit::TestCase
+  def test_example_dot_com
+    TCR.use_cassette('google_smtp') do
+      tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+      io = Net::InternetMessageIO.new(tcp_socket)
+      assert_match /220 mx.google.com ESMTP/, io.readline
+    end
+  end
+end
+```
+
+TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json.
+
+```json
+[
+  [
+    [
+      "read",
+      "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+    ]
+  ]
+]
+```
+
 ## Contributing
 
 1. Fork it
