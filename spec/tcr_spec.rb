@@ -294,6 +294,31 @@ describe TCR do
     end
   end
 
+  shared_examples "a binary compatible cassette" do
+    before(:each) {
+      TCR.configure { |c|
+        c.hook_tcp_ports = [25]
+        c.cassette_library_dir = "."
+      }
+    }
+
+    around(:each) do |example|
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+      example.run
+      File.unlink(test_file_name) if File.exists?(test_file_name)
+    end
+
+    it "handles binary data properly" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
+      TCR.use_cassette("test") do
+        uri = URI("http://c.cyberciti.biz/cbzcache/3rdparty/terminal.png")
+        data = Net::HTTP.get(uri)
+      end
+      cassette_contents = File.open(test_file_name) { |f| f.read }
+      cassette_contents.include?("User-Agent: Ruby").should == true
+    end
+  end
+
   describe "a JSON cassette" do
     let(:test_file_name) { "test.json" }
     # we default to JSON so no need to specify recording_format
@@ -311,6 +336,7 @@ describe TCR do
     end
 
     it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
   end
 
   describe "a BSON cassette" do
@@ -323,6 +349,7 @@ describe TCR do
     end
 
     it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
   end
 
   describe "a msgpack cassette" do
@@ -335,6 +362,7 @@ describe TCR do
     end
 
     it_behaves_like "a cassette"
+    it_behaves_like "a binary compatible cassette"
   end
 
   describe "an invalid format cassette" do
