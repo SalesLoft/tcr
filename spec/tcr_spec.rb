@@ -313,6 +313,18 @@ describe TCR do
     it_behaves_like "a cassette"
   end
 
+  describe "a BSON cassette" do
+    let(:test_file_name) { "test.bson" }
+
+    before(:each) do
+      TCR.configure do |c|
+        c.recording_format = :bson
+      end
+    end
+
+    it_behaves_like "a cassette"
+  end
+
   describe "an invalid format cassette" do
     before(:each) do
       TCR.configure do |c|

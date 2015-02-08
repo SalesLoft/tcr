@@ -6,6 +6,7 @@ require "tcr/version"
 require "socket"
 require "json"
 require "yaml"
+require "bson"
 
 
 module TCR

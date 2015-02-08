@@ -40,6 +40,8 @@ module TCR
         JSONCassette.new(name)
       elsif recording_format == :yaml
         YAMLCassette.new(name)
+      elsif recording_format == :bson
+        BSONCassette.new(name)
       else
         raise TCR::FormatError.new
       end
@@ -75,6 +77,22 @@ module TCR
 
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.yaml"
+    end
+  end
+
+  class BSONCassette < Cassette
+    def parse
+      Array.from_bson(StringIO.new(@contents))
+    end
+
+    def dump
+      @sessions.to_bson
+    end
+
+    protected
+
+    def filename
+      "#{TCR.configuration.cassette_library_dir}/#{name}.bson"
     end
   end
 end
