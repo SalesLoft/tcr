@@ -35,10 +35,10 @@ module TCR
       end
     end
 
-    def self.get_cassette(name, format)
-      if format == :json
+    def self.get_cassette(name, recording_format)
+      if recording_format == :json
         JSONCassette.new(name)
-      elsif format == :yaml
+      elsif recording_format == :yaml
         YAMLCassette.new(name)
       else
         raise TCR::FormatError.new

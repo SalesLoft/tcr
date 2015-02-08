@@ -26,7 +26,7 @@ describe TCR do
      end
 
      it "defaults to JSON" do
-       TCR.configuration.format.should == :json
+       TCR.configuration.recording_format.should == :json
      end
    end
 
@@ -39,8 +39,8 @@ describe TCR do
 
      it "configures cassette format" do
        expect {
-         TCR.configure { |c| c.format = :yaml }
-       }.to change{ TCR.configuration.format }.from(:json).to(:yaml)
+         TCR.configure { |c| c.recording_format = :yaml }
+       }.to change{ TCR.configuration.recording_format }.from(:json).to(:yaml)
      end
 
      it "configures tcp ports to hook" do
@@ -297,7 +297,7 @@ describe TCR do
 
     before(:each) do
       TCR.configure do |c|
-        c.format = :json
+        c.recording_format = :json
       end
     end
 
@@ -309,7 +309,7 @@ describe TCR do
 
     before(:each) do
       TCR.configure do |c|
-        c.format = :yaml
+        c.recording_format = :yaml
       end
     end
 
@@ -319,7 +319,7 @@ describe TCR do
   describe "an invalid format cassette" do
     before(:each) do
       TCR.configure do |c|
-        c.format = :foobar
+        c.recording_format = :foobar
       end
     end
 
