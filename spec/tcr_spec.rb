@@ -308,7 +308,7 @@ describe TCR do
       File.unlink(test_file_name) if File.exists?(test_file_name)
     end
 
-    it "handles binary data properly" do
+    it "handles recording binary data properly" do
       TCR.configure { |c| c.hook_tcp_ports = [80] }
       TCR.use_cassette("test") do
         uri = URI("http://c.cyberciti.biz/cbzcache/3rdparty/terminal.png")
@@ -316,6 +316,15 @@ describe TCR do
       end
       cassette_contents = File.open(test_file_name) { |f| f.read }
       cassette_contents.include?("User-Agent: Ruby").should == true
+    end
+
+    it "handles reading binary data properly" do
+      TCR.configure { |c| c.hook_tcp_ports = [80] }
+      TCR.use_cassette("spec/fixtures/binary_data") do
+        uri = URI("http://c.cyberciti.biz/cbzcache/3rdparty/terminal.png")
+        data = Net::HTTP.get(uri)
+        data.include?("PNG").should == true
+      end
     end
   end
 
