@@ -33,28 +33,31 @@ require 'tcr'
 
 TCR.configure do |c|
   c.cassette_library_dir = 'fixtures/tcr_cassettes'
-  c.hook_tcp_ports = [25]
+  c.hook_tcp_ports = [80]
 end
 
 class TCRTest < Test::Unit::TestCase
   def test_example_dot_com
-    TCR.use_cassette('google_smtp') do
-      tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
-      io = Net::InternetMessageIO.new(tcp_socket)
-      assert_match /220 mx.google.com ESMTP/, io.readline
+    TCR.use_cassette('google') do
+      data = Net::HTTP.get("google.com", "/")
+      assert_match /301 Moved/, data
     end
   end
 end
 ```
 
-Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google_smtp.json.
+Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cassettes/google.json.
 
 ```json
 [
   [
     [
+      "write",
+      "GET / HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: google.com\r\n\r\n"
+    ],
+    [
       "read",
-      "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+      "HTTP/1.1 301 Moved Permanently\r\nLocation: http://www.google.com/\r\nContent-Type: text/html; charset=UTF-8\r\nDate: Sun, 08 Feb 2015 02:42:29 GMT\r\nExpires: Tue, 10 Mar 2015 02:42:29 GMT\r\nCache-Control: public, max-age=2592000\r\nServer: gws\r\nContent-Length: 219\r\nX-XSS-Protection: 1; mode=block\r\nX-Frame-Options: SAMEORIGIN\r\nAlternate-Protocol: 80:quic,p=0.02\r\n\r\n<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<TITLE>301 Moved</TITLE></HEAD><BODY>\n<H1>301 Moved</H1>\nThe document has moved\n<A HREF=\"http://www.google.com/\">here</A>.\r\n</BODY></HTML>\r\n"
     ]
   ]
 ]
@@ -66,7 +69,7 @@ You can disable TCR hooking TCPSocket ports for a given block via `turned_off`:
 
 ```ruby
 TCR.turned_off do
-  tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+  data = Net::HTTP.get("google.com", "/")
 end
 ```
 
