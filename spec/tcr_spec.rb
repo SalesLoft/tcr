@@ -221,12 +221,12 @@ describe TCR do
         TCR.use_cassette("test") do
           smtp = Net::SMTP.start("aspmx.l.google.com", 25)
           smtp.finish
-          smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
+          smtp = Net::SMTP.start("mail-c.linkedin.com", 25)
           smtp.finish
         end
         cassette_contents = File.open("test.json") { |f| f.read }
         cassette_contents.include?("google.com ESMTP").should == true
-        cassette_contents.include?("yahoo.com ESMTP").should == true
+        cassette_contents.include?("mail-c.linkedin.com ESMTP").should == true
       end
 
       it "plays back multiple sessions per cassette in order" do
