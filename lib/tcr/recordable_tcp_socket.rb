@@ -95,7 +95,12 @@ module TCR
       end
     end
 
-    def _read(method, *args, blocking: true)
+    def _read(method, *args)
+      blocking = true
+      if args.last.is_a?(::Hash)
+        blocking = args.pop.fetch(:blocking, true)
+      end
+
       if live
           data = @socket.__send__(method, *args)
           recording << ["read", data]
