@@ -226,7 +226,7 @@ describe TCR do
         end
         cassette_contents = File.open("test.json") { |f| f.read }
         cassette_contents.include?("google.com ESMTP").should == true
-        cassette_contents.include?("mail-c.linkedin.com ESMTP").should == true
+        cassette_contents.include?("linkedin.com ESMTP").should == true
       end
 
       it "plays back multiple sessions per cassette in order" do
