@@ -2,9 +2,6 @@
 
 [![Build Status](https://travis-ci.org/robforman/tcr.png?branch=master)](https://travis-ci.org/robforman/tcr)
 
-[ ![Codeship Status for SalesLoft/melody](https://www.codeship.io/projects/9fcbda40-6859-0132-9920-3ad5c353d440/status?branch=master)](https://www.codeship.io/projects/53337)
-
-
 
 
 TCR is a *very* lightweight version of [VCR](https://github.com/vcr/vcr) for TCP sockets.
