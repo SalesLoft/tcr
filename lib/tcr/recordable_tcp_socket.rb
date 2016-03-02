@@ -133,6 +133,18 @@ module TCR
       true
     end
 
+    def sync
+      self
+    end
+
+    def sync=(arg)
+      self
+    end
+
+    def flush
+      self
+    end
+
     def session
       self
     end
