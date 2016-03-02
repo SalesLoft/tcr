@@ -1,0 +1,212 @@
+[
+  [
+    [
+      "read",
+      "220 mx.google.com ESMTP s68sm2109275yhp.29 - gsmtp\r\n"
+    ],
+    [
+      "write",
+      "EHLO localhost.localdomain\r\n"
+    ],
+    [
+      "read",
+      "250-mx.google.com at your service, [72.16.218.22]\r\n250-SIZE 35882577\r\n250-8BITMIME\r\n250-STARTTLS\r\n250-ENHANCEDSTATUSCODES\r\n250-PIPELINING\r\n250-CHUNKING\r\n250 SMTPUTF8\r\n"
+    ],
+    [
+      "write",
+      "STARTTLS\r\n"
+    ],
+    [
+      "read",
+      "220 2.0.0 Ready to start TLS\r\n"
+    ],
+    [
+      "write",
+      "EHLO localhost.localdomain\r\n"
+    ],
+    [
+      "read",
+      "250-mx.google.com at your service, [72.16.218.22]\r\n250-SIZE 35882577\r\n250-8BITMIME\r\n250-AUTH LOGIN PLAIN XOAUTH XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER\r\n250-ENHANCEDSTATUSCODES\r\n250-PIPELINING\r\n250-CHUNKING\r\n250 SMTPUTF8\r\n"
+    ],
+    [
+      "write",
+      "AUTH LOGIN\r\n"
+    ],
+    [
+      "read",
+      "334 VXNlcm5hbWU6\r\n"
+    ],
+    [
+      "write",
+      "<username>\r\n"
+    ],
+    [
+      "read",
+      "334 UGFzc3dvcmQ6\r\n"
+    ],
+    [
+      "write",
+      "<password>\r\n"
+    ],
+    [
+      "read",
+      "235 2.7.0 Accepted\r\n"
+    ],
+    [
+      "write",
+      "MAIL FROM:<yvonne@lang.name>\r\n"
+    ],
+    [
+      "read",
+      "250 2.1.0 OK s68sm2109275yhp.29 - gsmtp\r\n"
+    ],
+    [
+      "write",
+      "RCPT TO:<rob.forman@salesloft.com>\r\n"
+    ],
+    [
+      "read",
+      "250 2.1.5 OK s68sm2109275yhp.29 - gsmtp\r\n"
+    ],
+    [
+      "write",
+      "DATA\r\n"
+    ],
+    [
+      "read",
+      "354  Go ahead s68sm2109275yhp.29 - gsmtp\r\n"
+    ],
+    [
+      "write",
+      "Date: Wed, 10 Dec 2014 14:29:05 -0500\r\n"
+    ],
+    [
+      "write",
+      "From: \"Dr. Antonina Goldner\" <yvonne@lang.name>\r\n"
+    ],
+    [
+      "write",
+      "To: \"Rob Forman, Jr.\" <rob.forman@salesloft.com>\r\n"
+    ],
+    [
+      "write",
+      "Message-ID: <54889f0114dd6_e0cc3ff785c65be4768ab@porus-2.local.mail>\r\n"
+    ],
+    [
+      "write",
+      "Subject: Look at this dog\r\n"
+    ],
+    [
+      "write",
+      "Mime-Version: 1.0\r\n"
+    ],
+    [
+      "write",
+      "Content-Type: multipart/related;\r\n"
+    ],
+    [
+      "write",
+      " boundary=\"--==_mimepart_54889f0114dd6_e0cc3ff785c65be47679c\";\r\n"
+    ],
+    [
+      "write",
+      " charset=UTF-8\r\n"
+    ],
+    [
+      "write",
+      "Content-Transfer-Encoding: 7bit\r\n"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "write",
+      "----==_mimepart_54889f0114dd6_e0cc3ff785c65be47679c\r\n"
+    ],
+    [
+      "write",
+      "Content-Type: text/html;\r\n"
+    ],
+    [
+      "write",
+      " charset=UTF-8\r\n"
+    ],
+    [
+      "write",
+      "Content-Transfer-Encoding: 7bit\r\n"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "write",
+      "because it's awesome! <img src=\"cid:54889f0114dd6_e0cc3ff785c65be476690@porus-2.local.mail\" style=\"width: 1px;\"><img src=\"http://test.host/email_trackers/95c2a5ca-a740-4001-95bc-bdb8eefce914/open.gif\" alt=\"\" width=\"1\" height=\"1\">\r\n"
+    ],
+    [
+      "write",
+      "----==_mimepart_54889f0114dd6_e0cc3ff785c65be47679c\r\n"
+    ],
+    [
+      "write",
+      "Content-Type: image/gif;\r\n"
+    ],
+    [
+      "write",
+      " charset=UTF-8;\r\n"
+    ],
+    [
+      "write",
+      " filename=image1.gif\r\n"
+    ],
+    [
+      "write",
+      "Content-Transfer-Encoding: base64\r\n"
+    ],
+    [
+      "write",
+      "Content-Disposition: inline\r\n"
+    ],
+    [
+      "write",
+      "Content-ID: <54889f0114dd6_e0cc3ff785c65be476690@porus-2.local.mail>\r\n"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "write",
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\r\n"
+    ],
+    [
+      "write",
+      "\r\n"
+    ],
+    [
+      "write",
+      "----==_mimepart_54889f0114dd6_e0cc3ff785c65be47679c--\r\n"
+    ],
+    [
+      "write",
+      ".\r\n"
+    ],
+    [
+      "read",
+      "250 2.0.0 OK 1418239746 s68sm2109275yhp.29 - gsmtp\r\n"
+    ],
+    [
+      "write",
+      "QUIT\r\n"
+    ],
+    [
+      "read",
+      "221 2.0.0 closing connection s68sm2109275yhp.29 - gsmtp\r\n"
+    ]
+  ]
+]

@@ -5,6 +5,7 @@ require "net/http"
 require "net/imap"
 require "net/smtp"
 require 'thread'
+require "mail"
 
 
 describe TCR do
@@ -212,6 +213,24 @@ describe TCR do
       expect {
         TCR.use_cassette("spec/fixtures/google_https") do
           http.request(Net::HTTP::Get.new("/"))
+        end
+      }.not_to raise_error
+    end
+
+    it "can stub the full session of a real server accepting a real email over SMTPS with STARTTLS" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [587]
+        c.block_for_reads = true
+      }
+
+      raw_contents = File.open("spec/fixtures/email_with_image.eml"){ |f| f.read }
+      message = Mail::Message.new(raw_contents)
+      smtp_auth_parameters = { address: "smtp.gmail.com", port: 587, user_name: "dummy", password: "dummy", enable_starttls_auto: true, authentication: :login}
+      message.delivery_method(:smtp, smtp_auth_parameters)
+
+      expect{
+        TCR.use_cassette("spec/fixtures/smtp-success") do
+          message.deliver
         end
       }.not_to raise_error
     end
