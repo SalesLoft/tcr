@@ -2,13 +2,13 @@
   [
     [
       "read",
-      "220 mx.google.com ESMTP h5si2286277qec.54 - gsmtp\r\n"
+      "220 smtp.mandrillapp.com ESMTP\r\n"
     ]
   ],
   [
     [
       "read",
-      "220 mta1009.mail.gq1.yahoo.com ESMTP YSmtpProxy service ready\r\n"
+      "220 mail.smtp2go.com ESMTP Exim 4.86 Wed, 02 Mar 2016 02:56:54 +0000\r\n"
     ]
   ]
 ]
