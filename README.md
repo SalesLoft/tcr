@@ -30,15 +30,15 @@ require 'tcr'
 
 TCR.configure do |c|
   c.cassette_library_dir = 'fixtures/tcr_cassettes'
-  c.hook_tcp_ports = [25]
+  c.hook_tcp_ports = [2525]
 end
 
 class TCRTest < Test::Unit::TestCase
   def test_example_dot_com
-    TCR.use_cassette('google_smtp') do
-      tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+    TCR.use_cassette('mandrill_smtp') do
+      tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
       io = Net::InternetMessageIO.new(tcp_socket)
-      assert_match /220 mx.google.com ESMTP/, io.readline
+      assert_match /220 smtp.mandrillapp.com ESMTP/, io.readline
     end
   end
 end
@@ -51,7 +51,7 @@ Run this test once, and TCR will record the tcp interactions to fixtures/tcr_cas
   [
     [
       "read",
-      "220 mx.google.com ESMTP x3si2474860qas.18 - gsmtp\r\n"
+      "220 smtp.mandrillapp.com ESMTP\r\n"
     ]
   ]
 ]
@@ -63,7 +63,7 @@ You can disable TCR hooking TCPSocket ports for a given block via `turned_off`:
 
 ```ruby
 TCR.turned_off do
-  tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+  tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
 end
 ```
 
