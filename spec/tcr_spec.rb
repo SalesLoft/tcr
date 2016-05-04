@@ -141,6 +141,14 @@ describe TCR do
       expect(TCR.cassette).to be_nil
     end
 
+    it "resets the cassette after an error" do
+      expect(TCR.cassette).to be_nil
+      expect {
+        TCR.use_cassette("test") { raise "Whoops!" }
+      }.to raise_error("Whoops!")
+      expect(TCR.cassette).to be_nil
+    end
+
     it "creates a cassette file on use" do
       expect {
         TCR.use_cassette("test") do
