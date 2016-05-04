@@ -30,8 +30,8 @@ module TCR
       _read(:gets, *args)
     end
 
-    def read_nonblock(bytes)
-      _read(:read_nonblock, bytes, blocking: false)
+    def read_nonblock(*args)
+      _read(:read_nonblock, *args, blocking: false)
     end
 
     def print(str)
@@ -160,6 +160,10 @@ module TCR
       if live
         socket.io.shutdown
       end
+    end
+
+    def connect_nonblock(*)
+      self
     end
 
     def connect
