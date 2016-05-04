@@ -5,6 +5,7 @@ require "net/http"
 require "net/imap"
 require "net/smtp"
 require 'thread'
+require "mail"
 
 
 describe TCR do
@@ -41,8 +42,8 @@ describe TCR do
 
      it "configures tcp ports to hook" do
        expect {
-         TCR.configure { |c| c.hook_tcp_ports = [25] }
-       }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([25])
+         TCR.configure { |c| c.hook_tcp_ports = [2525] }
+       }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([2525])
      end
 
      it "configures allowing a blocking read mode" do
@@ -53,9 +54,9 @@ describe TCR do
    end
 
    it "raises an error if you connect to a hooked port without using a cassette" do
-     TCR.configure { |c| c.hook_tcp_ports = [25] }
+     TCR.configure { |c| c.hook_tcp_ports = [2525] }
      expect {
-       tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+       tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
      }.to raise_error(TCR::NoCassetteError)
    end
 
@@ -67,17 +68,17 @@ describe TCR do
     end
 
     it "disables hooks within the block" do
-      TCR.configure { |c| c.hook_tcp_ports = [25] }
+      TCR.configure { |c| c.hook_tcp_ports = [2525] }
       TCR.turned_off do
         TCR.configuration.hook_tcp_ports.should == []
       end
     end
 
     it "makes real TCPSocket.open calls even when hooks are setup" do
-      TCR.configure { |c| c.hook_tcp_ports = [25] }
+      TCR.configure { |c| c.hook_tcp_ports = [2525] }
       expect(TCPSocket).to receive(:real_open)
       TCR.turned_off do
-        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
       end
     end
   end
@@ -123,7 +124,7 @@ describe TCR do
   describe ".use_cassette" do
     before(:each) {
       TCR.configure { |c|
-        c.hook_tcp_ports = [25]
+        c.hook_tcp_ports = [2525]
         c.cassette_library_dir = "."
       }
     }
@@ -143,36 +144,36 @@ describe TCR do
     it "creates a cassette file on use" do
       expect {
         TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
         end
       }.to change{ File.exists?("./test.json") }.from(false).to(true)
     end
 
     it "records the tcp session data into the file" do
       TCR.use_cassette("test") do
-        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
         io = Net::InternetMessageIO.new(tcp_socket)
         line = io.readline
         tcp_socket.close
       end
       cassette_contents = File.open("test.json") { |f| f.read }
-      cassette_contents.include?("220 mx.google.com ESMTP").should == true
+      cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
     end
 
     it "plays back tcp sessions without opening a real connection" do
       expect(TCPSocket).to_not receive(:real_open)
 
-      TCR.use_cassette("spec/fixtures/google_smtp") do
-        tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+      TCR.use_cassette("spec/fixtures/mandrill_smtp") do
+        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
         io = Net::InternetMessageIO.new(tcp_socket)
-        line = io.readline.should include("220 mx.google.com ESMTP")
+        line = io.readline.should include("220 smtp.mandrillapp.com ESMTP")
       end
     end
 
     it "raises an error if the recording gets out of order (i.e., we went to write but it expected a read)" do
       expect {
-        TCR.use_cassette("spec/fixtures/google_smtp") do
-          tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+        TCR.use_cassette("spec/fixtures/mandrill_smtp") do
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           io = Net::InternetMessageIO.new(tcp_socket)
           io.write("hi")
         end
@@ -216,28 +217,46 @@ describe TCR do
       }.not_to raise_error
     end
 
+    it "can stub the full session of a real server accepting a real email over SMTPS with STARTTLS" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [587]
+        c.block_for_reads = true
+      }
+
+      raw_contents = File.open("spec/fixtures/email_with_image.eml"){ |f| f.read }
+      message = Mail::Message.new(raw_contents)
+      smtp_auth_parameters = { address: "smtp.gmail.com", port: 587, user_name: "dummy", password: "dummy", enable_starttls_auto: true, authentication: :login}
+      message.delivery_method(:smtp, smtp_auth_parameters)
+
+      expect{
+        TCR.use_cassette("spec/fixtures/smtp-success") do
+          message.deliver
+        end
+      }.not_to raise_error
+    end
+
     context "multiple connections" do
       it "records multiple sessions per cassette" do
         TCR.use_cassette("test") do
-          smtp = Net::SMTP.start("aspmx.l.google.com", 25)
+          smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
           smtp.finish
-          smtp = Net::SMTP.start("mail-c.linkedin.com", 25)
+          smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
           smtp.finish
         end
         cassette_contents = File.open("test.json") { |f| f.read }
-        cassette_contents.include?("google.com ESMTP").should == true
-        cassette_contents.include?("linkedin.com ESMTP").should == true
+        cassette_contents.include?("smtp.mandrillapp.com ESMTP").should == true
+        cassette_contents.include?("mail.smtp2go.com ESMTP").should == true
       end
 
       it "plays back multiple sessions per cassette in order" do
         TCR.use_cassette("spec/fixtures/multitest") do
-          tcp_socket = TCPSocket.open("aspmx.l.google.com", 25)
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           io = Net::InternetMessageIO.new(tcp_socket)
-          line = io.readline.should include("google.com ESMTP")
+          line = io.readline.should include("smtp.mandrillapp.com ESMTP")
 
-          tcp_socket = TCPSocket.open("mta6.am0.yahoodns.net", 25)
+          tcp_socket = TCPSocket.open("mail.smtp2go.com", 2525)
           io = Net::InternetMessageIO.new(tcp_socket)
-          line = io.readline.should include("yahoo.com ESMTP")
+          line = io.readline.should include("mail.smtp2go.com ESMTP")
         end
       end
 
@@ -273,9 +292,9 @@ describe TCR do
       it "raises an error if you try to playback more sessions than you previously recorded" do
         expect {
           TCR.use_cassette("spec/fixtures/multitest-smtp") do
-            smtp = Net::SMTP.start("aspmx.l.google.com", 25)
-            smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
-            smtp = Net::SMTP.start("mta6.am0.yahoodns.net", 25)
+            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
+            smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
+            smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
           end
         }.to raise_error(TCR::NoMoreSessionsError)
       end
