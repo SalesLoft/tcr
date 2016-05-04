@@ -42,6 +42,7 @@ module TCR
     TCR.cassette = Cassette.new(name)
     yield
     TCR.cassette.save
+  ensure
     TCR.cassette = nil
   end
 
