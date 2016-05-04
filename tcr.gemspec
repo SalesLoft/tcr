@@ -19,5 +19,6 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "mail"
+  gem.add_development_dependency "mime-types", "~>2.0"
   gem.add_development_dependency "geminabox"
 end
