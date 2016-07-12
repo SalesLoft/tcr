@@ -59,13 +59,17 @@ end
 # The monkey patch shim
 class TCPSocket
   class << self
-    alias_method :real_open,  :open
+    [:new, :open].each do |m|
+      alias_method "real_#{m}", m
 
-    def open(address, port, *args)
-      if TCR.configuration.hook_tcp_ports.include?(port)
-        TCR::RecordableTCPSocket.new(address, port, TCR.cassette)
-      else
-        real_open(address, port)
+      define_method m do |*args|
+        if TCR.configuration.hook_tcp_ports.include?(args[1])
+          TCR::RecordableTCPSocket.new(TCR.cassette) do
+            send("real_#{m}", *args)
+          end
+        else
+          send("real_#{m}", *args)
+        end
       end
     end
   end

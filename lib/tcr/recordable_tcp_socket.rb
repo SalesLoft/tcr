@@ -8,14 +8,14 @@ module TCR
     attr_reader :live, :socket
     attr_accessor :recording
 
-    def initialize(address, port, cassette)
+    def initialize(cassette)
       raise TCR::NoCassetteError.new unless TCR.cassette
 
       @read_lock = Queue.new
 
       if cassette.recording?
         @live = true
-        @socket = TCPSocket.real_open(address, port)
+        @socket = yield
       else
         @live = false
       end
