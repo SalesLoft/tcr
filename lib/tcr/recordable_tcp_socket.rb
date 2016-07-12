@@ -22,8 +22,8 @@ module TCR
       @recording = cassette.next_session
     end
 
-    def read(bytes)
-      _read(:read, bytes)
+    def read(*args)
+      _read(:read, *args)
     end
 
     def gets(*args)
