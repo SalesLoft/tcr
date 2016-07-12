@@ -222,6 +222,17 @@ describe TCR do
       end
     end
 
+    it "stubs out Socket#read correctly" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [23]
+      }
+      TCR.use_cassette("spec/fixtures/starwars_telnet") do
+        sock = TCPSocket.open("towel.blinkenlights.nl", 23)
+        expect(sock.read.length).to_not be_zero
+        sock.close
+      end
+    end
+
     it "supports ssl sockets" do
       TCR.configure { |c| c.hook_tcp_ports = [443] }
       http = Net::HTTP.new("www.google.com", 443)
