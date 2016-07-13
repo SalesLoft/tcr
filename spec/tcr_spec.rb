@@ -67,6 +67,10 @@ describe TCR do
       }.to raise_error(ArgumentError)
     end
 
+    it "returns the value" do
+      expect(TCR.turned_off { :foobar }).to eq(:foobar)
+    end
+
     it "disables hooks within the block" do
       TCR.configure { |c| c.hook_tcp_ports = [2525] }
       TCR.turned_off do
@@ -128,6 +132,10 @@ describe TCR do
         c.cassette_library_dir = "."
       }
     }
+
+    it "returns the value" do
+      expect(TCR.use_cassette("test") { :foobar }).to eq(:foobar)
+    end
 
     it "requires a block to call" do
       expect {

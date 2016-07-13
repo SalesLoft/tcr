@@ -40,8 +40,9 @@ module TCR
   def use_cassette(name, options = {}, &block)
     raise ArgumentError, "`TCR.use_cassette` requires a block." unless block
     TCR.cassette = Cassette.new(name)
-    yield
+    ret_val = yield
     TCR.cassette.save
+    ret_val
   ensure
     TCR.cassette = nil
   end
@@ -50,8 +51,9 @@ module TCR
     raise ArgumentError, "`TCR.turned_off` requires a block." unless block
     current_hook_tcp_ports = configuration.hook_tcp_ports
     configuration.hook_tcp_ports = []
-    yield
+    ret_val = yield
     configuration.hook_tcp_ports = current_hook_tcp_ports
+    ret_val
   end
 end
 
