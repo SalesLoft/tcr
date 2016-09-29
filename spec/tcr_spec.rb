@@ -31,7 +31,11 @@ describe TCR do
      it "defaults to erroring on read/write mismatch access" do
        TCR.configuration.block_for_reads.should be_falsey
      end
-   end
+
+     it "has a default cassette type" do
+       TCR.configuration.serialize_with.should == :json
+     end
+  end
 
    describe ".configure" do
      it "configures cassette location" do
@@ -50,6 +54,12 @@ describe TCR do
        expect {
          TCR.configure { |c| c.block_for_reads = true }
        }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
+     end
+
+     it "configures cassette type" do
+       expect {
+         TCR.configure { |c| c.serialize_with = :gzip }
+       }.to change{ TCR.configuration.serialize_with }.from(:json).to(:gzip)
      end
    end
 
@@ -221,6 +231,20 @@ describe TCR do
       expect {
         TCR.use_cassette("spec/fixtures/google_https") do
           http.request(Net::HTTP::Get.new("/"))
+        end
+      }.not_to raise_error
+    end
+
+    it "supports gzip cassettes" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [80]
+        c.serialize_with = :gzip
+      }
+
+      expect {
+        TCR.use_cassette("spec/fixtures/google_http") do
+          body = Net::HTTP.get(URI('http://google.com/'))
+          expect(body.length).to eq(258)
         end
       }.not_to raise_error
     end
