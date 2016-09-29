@@ -244,7 +244,7 @@ describe TCR do
       expect {
         TCR.use_cassette("spec/fixtures/google_http") do
           body = Net::HTTP.get(URI('http://google.com/'))
-          expect(body.length).to eq(258)
+          expect(body).to_not be_empty
         end
       }.not_to raise_error
     end
