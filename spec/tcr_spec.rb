@@ -308,4 +308,16 @@ describe TCR do
       end
     end
   end
+
+  it "replaces sockets created with Socket.tcp" do
+    TCR.configure { |c|
+      c.hook_tcp_ports = [23]
+      c.cassette_library_dir = "."
+    }
+
+    TCR.use_cassette("test") do
+      sock = Socket.tcp("towel.blinkenlights.nl", 23, {})
+      expect(sock).to be_a(TCR::RecordableTCPSocket)
+    end
+  end
 end
