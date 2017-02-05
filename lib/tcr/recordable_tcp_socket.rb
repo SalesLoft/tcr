@@ -5,6 +5,16 @@ require 'thread'
 
 module TCR
   class RecordableTCPSocket
+    module MockedIO
+      def self.wait_readable(_timeout)
+        true
+      end
+
+      def self.wait_writable(_timeout)
+        true
+      end
+    end
+
     attr_reader :live, :socket
     attr_accessor :recording
 
@@ -46,6 +56,8 @@ module TCR
     def to_io
       if live
         @socket.to_io
+      else
+        MockedIO
       end
     end
 
