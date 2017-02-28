@@ -180,6 +180,20 @@ describe TCR do
       cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
     end
 
+    it "records the tcp session data into the yaml file" do
+      TCR.configure { |c| c.format = "yaml" }
+
+      TCR.use_cassette("test") do
+        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+        io = Net::InternetMessageIO.new(tcp_socket)
+        line = io.readline
+        tcp_socket.close
+      end
+      cassette_contents = File.open("test.yaml") { |f| f.read }
+      cassette_contents.include?("---").should == true
+      cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+    end
+
     it "plays back tcp sessions without opening a real connection" do
       expect(TCPSocket).to_not receive(:real_open)
 
