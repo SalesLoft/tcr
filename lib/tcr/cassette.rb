@@ -8,7 +8,7 @@ module TCR
       if File.exists?(filename)
         @recording = false
         @contents = File.open(filename) { |f| f.read }
-        @sessions = JSON.parse(@contents)
+        @sessions = unmarshal(@contents)
       else
         @recording = true
         @sessions = []
@@ -31,14 +31,36 @@ module TCR
 
     def save
       if recording?
-        File.open(filename, "w") { |f| f.write(JSON.pretty_generate(@sessions)) }
+        File.open(filename, "w") { |f| f.write(marshal(@sessions)) }
       end
     end
 
     protected
 
+    def unmarshal(content)
+      case TCR.configuration.format
+      when "json"
+        JSON.parse(content)
+      when "yaml"
+        YAML.load(content)
+      else
+        raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
+      end
+    end
+
+    def marshal(content)
+      case TCR.configuration.format
+      when "json"
+        JSON.pretty_generate(content)
+      when "yaml"
+        YAML.dump(content)
+      else
+        raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
+      end
+    end
+
     def filename
-      "#{TCR.configuration.cassette_library_dir}/#{name}.json"
+      "#{TCR.configuration.cassette_library_dir}/#{name}.#{TCR.configuration.format}"
     end
   end
 end
