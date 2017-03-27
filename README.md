@@ -67,6 +67,19 @@ TCR.turned_off do
 end
 ```
 
+To make sure all external calls really happened use `hit_all` option:
+
+```ruby
+class TCRTest < Test::Unit::TestCase
+  def test_example_dot_com
+    TCR.use_cassette('mandrill_smtp', hit_all: true) do
+      # There are previously recorded external calls.
+      # ExtraSessionsError will be raised as a result.
+    end
+  end
+end
+```
+
 ## Contributing
 
 1. Fork it

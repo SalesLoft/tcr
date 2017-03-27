@@ -332,6 +332,14 @@ describe TCR do
           end
         }.to raise_error(TCR::NoMoreSessionsError)
       end
+
+      it "raises an error if you try to playback less sessions than you previously recorded" do
+        expect {
+          TCR.use_cassette("spec/fixtures/multitest-extra-smtp", hit_all: true) do
+            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
+          end
+        }.to raise_error(TCR::ExtraSessionsError)
+      end
     end
   end
 

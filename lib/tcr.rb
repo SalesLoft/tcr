@@ -42,6 +42,7 @@ module TCR
     TCR.cassette = Cassette.new(name)
     yield
     TCR.cassette.save
+    TCR.cassette.check_hits_all_sesstions if options[:hit_all] == true
   ensure
     TCR.cassette = nil
   end

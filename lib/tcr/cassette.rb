@@ -35,6 +35,12 @@ module TCR
       end
     end
 
+    def check_hits_all_sesstions
+      if !recording?
+        raise ExtraSessionsError if !@sessions.empty?
+      end
+    end
+
     protected
 
     def unmarshal(content)
