@@ -80,6 +80,13 @@ class TCRTest < Test::Unit::TestCase
 end
 ```
 
+You can also use the configuration option:
+
+```ruby
+TCR.configure do |c|
+  c.hit_all = true
+end
+```
 ## Contributing
 
 1. Fork it
