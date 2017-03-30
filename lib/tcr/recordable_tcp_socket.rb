@@ -87,7 +87,7 @@ module TCR
     def _write(method, data)
       if live
         @socket.__send__(method, data)
-        recording << ["write", data]
+        recording << ["write", data.to_s.force_encoding("UTF-8")]
       else
         direction, data = recording.shift
         _ensure_direction("write", direction)
@@ -103,7 +103,7 @@ module TCR
 
       if live
           data = @socket.__send__(method, *args)
-          recording << ["read", data]
+          recording << ["read", data.to_s.force_encoding("UTF-8")]
       else
         _block_for_read_data if blocking && TCR.configuration.block_for_reads
         raise EOFError if recording.empty?
