@@ -33,6 +33,10 @@ describe TCR do
      it "defaults to erroring on read/write mismatch access" do
        TCR.configuration.block_for_reads.should be_falsey
      end
+     
+     it "defaults to hit all to false" do
+       TCR.configuration.hit_all.should be_falsey
+     end
    end
 
    describe ".configure" do
@@ -52,6 +56,12 @@ describe TCR do
        expect {
          TCR.configure { |c| c.block_for_reads = true }
        }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
+     end
+     
+     it "configures to check if all sesstions was hit" do
+       expect {
+         TCR.configure { |c| c.hit_all = true }
+       }.to change{ TCR.configuration.hit_all }.from(false).to(true)
      end
    end
 
@@ -331,6 +341,14 @@ describe TCR do
             smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
           end
         }.to raise_error(TCR::NoMoreSessionsError)
+      end
+
+      it "raises an error if you try to playback less sessions than you previously recorded" do
+        expect {
+          TCR.use_cassette("spec/fixtures/multitest-extra-smtp", hit_all: true) do
+            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
+          end
+        }.to raise_error(TCR::ExtraSessionsError)
       end
     end
   end
