@@ -87,7 +87,7 @@ module TCR
     def _write(method, data)
       if live
         @socket.__send__(method, data)
-        recording << ["write", data.to_s.force_encoding("UTF-8")]
+        recording << ["write", data.dup.to_s.force_encoding("UTF-8")]
       else
         direction, data = recording.shift
         _ensure_direction("write", direction)

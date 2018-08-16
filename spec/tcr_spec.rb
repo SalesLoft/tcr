@@ -364,4 +364,16 @@ describe TCR do
       expect(sock).to be_a(TCR::RecordableTCPSocket)
     end
   end
+
+  it "handles frozen Strings" do
+    TCR.configure { |c|
+      c.hook_tcp_ports = [443]
+      c.cassette_library_dir = "."
+    }
+
+    TCR.use_cassette("test") do
+      sock = TCPSocket.open("google.com", 443)
+      sock.print("hello\n".freeze)
+    end
+  end
 end
