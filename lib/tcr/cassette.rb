@@ -49,6 +49,8 @@ module TCR
         JSON.parse(content)
       when "yaml"
         YAML.load(content)
+      when "marshal"
+        Marshal.load(content)
       else
         raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
       end
@@ -60,6 +62,8 @@ module TCR
         JSON.pretty_generate(content)
       when "yaml"
         YAML.dump(content)
+      when "marshal"
+        Marshal.dump(content)
       else
         raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
       end

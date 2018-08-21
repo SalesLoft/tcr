@@ -17,13 +17,18 @@ module TCR
         @live = true
         @socket = TCPSocket.real_open(address, port)
       else
-        @live = false
+        @live   = false
+        @closed = false
       end
       @recording = cassette.next_session
     end
 
     def read(bytes)
       _read(:read, bytes)
+    end
+
+    def getc(*args)
+      _read(:getc, *args)
     end
 
     def gets(*args)
@@ -53,13 +58,15 @@ module TCR
       if live
         @socket.closed?
       else
-        false
+        @closed
       end
     end
 
     def close
       if live
         @socket.close
+      else
+        @closed = true
       end
     end
 
@@ -86,8 +93,9 @@ module TCR
 
     def _write(method, data)
       if live
-        @socket.__send__(method, data)
-        recording << ["write", data.dup.to_s.force_encoding("UTF-8")]
+        payload = data.dup if !data.is_a?(Symbol)
+        @socket.__send__(method, payload)
+        recording << ["write", data.dup]
       else
         direction, data = recording.shift
         _ensure_direction("write", direction)
@@ -102,8 +110,9 @@ module TCR
       end
 
       if live
-          data = @socket.__send__(method, *args)
-          recording << ["read", data.to_s.force_encoding("UTF-8")]
+          data    = @socket.__send__(method, *args)
+          payload = data.dup if !data.is_a?(Symbol)
+          recording << ["read", payload]
       else
         _block_for_read_data if blocking && TCR.configuration.block_for_reads
         raise EOFError if recording.empty?
