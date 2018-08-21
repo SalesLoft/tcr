@@ -4,6 +4,8 @@ require "net/protocol"
 require "net/http"
 require "net/imap"
 require "net/smtp"
+require "net/ldap"
+require "tcr/net/ldap"
 require 'thread'
 require "mail"
 
@@ -16,9 +18,11 @@ describe TCR do
   around(:each) do |example|
     File.unlink("test.json") if File.exists?("test.json")
     File.unlink("test.yaml") if File.exists?("test.yaml")
+    File.unlink("test.marshal") if File.exists?("test.marshal")
     example.run
     File.unlink("test.json") if File.exists?("test.json")
     File.unlink("test.yaml") if File.exists?("test.yaml")
+    File.unlink("test.marshal") if File.exists?("test.marshal")
   end
 
   describe ".configuration" do
@@ -177,6 +181,16 @@ describe TCR do
           tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
         end
       }.to change{ File.exists?("./test.yaml") }.from(false).to(true)
+    end
+
+    it "creates a cassette file on use with marshal" do
+      TCR.configure { |c| c.format = "marshal" }
+
+      expect {
+        TCR.use_cassette("test") do
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+        end
+      }.to change{ File.exists?("./test.marshal") }.from(false).to(true)
     end
 
     it "records the tcp session data into the file" do
@@ -375,5 +389,32 @@ describe TCR do
       sock = TCPSocket.open("google.com", 443)
       sock.print("hello\n".freeze)
     end
+  end
+
+  it "supports Net::LDAP connections" do
+    TCR.configure { |c|
+      c.hook_tcp_ports       = [389]
+      c.format               = 'marshal'
+      c.cassette_library_dir = "."
+    }
+    expect {
+      TCR.use_cassette("spec/fixtures/ldap") do
+        ldap = Net::LDAP.new(
+          host: 'ldap.forumsys.com',
+          port: 389,
+        )
+
+        ldap.auth 'cn=read-only-admin,dc=example,dc=com', 'password'
+
+        ldap.search(
+          base:          'DC=example,DC=com',
+          filter:        '(ou=mathematicians,dc=example,dc=com)',
+          scope:         Net::LDAP::SearchScope_WholeSubtree,
+          return_result: false
+        ) do |_entry|
+          break
+        end
+      end
+    }.not_to raise_error
   end
 end

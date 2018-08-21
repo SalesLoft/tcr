@@ -6,7 +6,7 @@
 
 TCR is a *very* lightweight version of [VCR](https://github.com/vcr/vcr) for TCP sockets.
 
-Currently used for recording 'net/smtp' interactions so only a few of the TCPSocket methods are recorded out.
+Currently used for recording 'net/smtp', 'net/imap' and 'net/ldap' interactions so only a few of the TCPSocket methods are recorded out.
 
 ## Installation
 
@@ -87,6 +87,26 @@ TCR.configure do |c|
   c.hit_all = true
 end
 ```
+
+The following storage formats are supported:
+
+- JSON (default)
+- YAML
+- Marshal (recommended for binary data transfer like LDAP)
+
+You can configure them via:
+
+```ruby
+TCR.configure do |c|
+  c.format = 'json'
+  # or
+  c.format = 'yaml'
+  # or
+  c.format = 'marshal'
+end
+```
+
+
 ## Contributing
 
 1. Fork it
