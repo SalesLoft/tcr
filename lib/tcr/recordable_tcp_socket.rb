@@ -93,7 +93,7 @@ module TCR
 
     def _write(method, data)
       if live
-        payload = data.dup if data.respond_to?(:dup)
+        payload = data.dup if !data.is_a?(Symbol)
         @socket.__send__(method, payload)
         recording << ["write", data.dup]
       else
@@ -111,7 +111,7 @@ module TCR
 
       if live
           data    = @socket.__send__(method, *args)
-          payload = data.dup if data.respond_to?(:dup)
+          payload = data.dup if !data.is_a?(Symbol)
           recording << ["read", payload]
       else
         _block_for_read_data if blocking && TCR.configuration.block_for_reads
