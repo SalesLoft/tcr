@@ -30,9 +30,10 @@ module TCR
     end
 
     def save
-      if recording?
-        File.open(filename, "w") { |f| f.write(marshal(@sessions)) }
-      end
+      return if !recording?
+      File.write(filename, marshal(@sessions))
+    rescue Encoding::UndefinedConversionError
+      File.binwrite(filename, marshal(@sessions))
     end
 
     def check_hits_all_sessions
@@ -52,7 +53,8 @@ module TCR
       when "marshal"
         Marshal.load(content)
       else
-        raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
+        raise "unrecognized cassette format '#{TCR.configuration.format}'; " \
+              "please use one of 'json', 'yaml', or 'marshal'"
       end
     end
 
@@ -65,7 +67,8 @@ module TCR
       when "marshal"
         Marshal.dump(content)
       else
-        raise RuntimeError.new "unrecognized format #{TCR.configuration.format}, please use `json` or `yaml`"
+        raise "unrecognized cassette format '#{TCR.configuration.format}'; " \
+              "please use one of 'json', 'yaml', or 'marshal'"
       end
     end
 
