@@ -6,7 +6,7 @@ require "net/imap"
 require "net/smtp"
 require "net/ldap"
 require "tcr/net/ldap"
-require 'thread'
+require "thread"
 require "mail"
 
 
@@ -37,44 +37,44 @@ describe TCR do
      it "defaults to erroring on read/write mismatch access" do
        TCR.configuration.block_for_reads.should be_falsey
      end
-     
+
      it "defaults to hit all to false" do
        TCR.configuration.hit_all.should be_falsey
      end
    end
 
-   describe ".configure" do
-     it "configures cassette location" do
-       expect {
-         TCR.configure { |c| c.cassette_library_dir = "some/dir" }
-       }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
-     end
+  describe ".configure" do
+    it "configures cassette location" do
+      expect {
+        TCR.configure { |c| c.cassette_library_dir = "some/dir" }
+      }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
+    end
 
-     it "configures tcp ports to hook" do
-       expect {
-         TCR.configure { |c| c.hook_tcp_ports = [2525] }
-       }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([2525])
-     end
+    it "configures tcp ports to hook" do
+      expect {
+        TCR.configure { |c| c.hook_tcp_ports = [2525] }
+      }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([2525])
+    end
 
-     it "configures allowing a blocking read mode" do
-       expect {
-         TCR.configure { |c| c.block_for_reads = true }
-       }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
-     end
-     
-     it "configures to check if all sesstions was hit" do
-       expect {
-         TCR.configure { |c| c.hit_all = true }
-       }.to change{ TCR.configuration.hit_all }.from(false).to(true)
-     end
-   end
+    it "configures allowing a blocking read mode" do
+      expect {
+        TCR.configure { |c| c.block_for_reads = true }
+      }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
+    end
 
-   it "raises an error if you connect to a hooked port without using a cassette" do
-     TCR.configure { |c| c.hook_tcp_ports = [2525] }
-     expect {
-       tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-     }.to raise_error(TCR::NoCassetteError)
-   end
+    it "configures to check if all sesstions was hit" do
+      expect {
+        TCR.configure { |c| c.hit_all = true }
+      }.to change{ TCR.configuration.hit_all }.from(false).to(true)
+    end
+  end
+
+  it "raises an error if you connect to a hooked port without using a cassette" do
+    TCR.configure { |c| c.hook_tcp_ports = [2525] }
+    expect {
+      tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+    }.to raise_error(TCR::NoCassetteError)
+  end
 
   describe ".turned_off" do
     it "requires a block to call" do
@@ -149,6 +149,44 @@ describe TCR do
       expect {
         TCR.use_cassette("test")
       }.to raise_error(ArgumentError)
+    end
+
+    context "when path to cassette does not exist" do
+      let(:unique_dirname) { Dir.entries(".").sort.last.next }
+
+      around do |example|
+        expect(Dir.exist?(unique_dirname)).to be(false)
+        example.run
+        FileUtils.rm_rf(unique_dirname)
+      end
+
+      it "creates it" do
+        expect { TCR.use_cassette("#{unique_dirname}/foo/bar/test") { } }.not_to raise_error
+      end
+    end
+
+    context "when path to cassette is not writable" do
+      let(:unique_dirname) { Dir.entries(".").sort.last.next }
+
+      around do |example|
+        FileUtils.mkdir(unique_dirname)
+        FileUtils.chmod("u-w", unique_dirname)
+        expect { FileUtils.touch("#{unique_dirname}/foo") }.to raise_error(Errno::EACCES)
+        example.run
+        FileUtils.rm_rf(unique_dirname)
+      end
+
+      it "raises error BEFORE block runs" do
+        allow(TCPSocket).to receive(:open)
+
+        expect do
+          TCR.use_cassette("#{unique_dirname}/foo") do
+            TCPSocket.open("smtp.mandrillapp.com", 2525)
+          end
+        end.to raise_error(Errno::EACCES)
+
+        expect(TCPSocket).not_to have_received(:open)
+      end
     end
 
     it "resets the cassette after use" do

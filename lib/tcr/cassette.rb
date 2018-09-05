@@ -1,22 +1,23 @@
+require 'fileutils'
+
 module TCR
   class Cassette
     attr_reader :name
 
     def initialize(name)
       @name = name
+      @sessions = recording? ? [] : unmarshal(File.read(filename))
 
-      if File.exists?(filename)
-        @recording = false
-        @contents = File.open(filename) { |f| f.read }
-        @sessions = unmarshal(@contents)
-      else
-        @recording = true
+      if recording?
+        verify_cassette_path_is_writable
         @sessions = []
+      else
+        @sessions = unmarshal(File.read(filename))
       end
     end
 
     def recording?
-      @recording
+      @recording ||= !File.exists?(filename)
     end
 
     def next_session
@@ -71,6 +72,11 @@ module TCR
 
     def filename
       "#{TCR.configuration.cassette_library_dir}/#{name}.#{TCR.configuration.format}"
+    end
+
+    def verify_cassette_path_is_writable
+      FileUtils.mkdir_p(File.dirname(filename))
+      FileUtils.touch(filename)
     end
   end
 end
