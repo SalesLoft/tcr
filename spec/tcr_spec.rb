@@ -165,7 +165,7 @@ RSpec.describe TCR do
       expect(TCR.cassette).to be_nil
     end
 
-    context 'when configured for JSON format' do
+    context "when configured for JSON format" do
       it "creates a cassette file on use" do
         expect {
           TCR.use_cassette("test") do
@@ -186,7 +186,7 @@ RSpec.describe TCR do
       end
     end
 
-    context 'when configured for YAML format' do
+    context "when configured for YAML format" do
       before { TCR.configure { |c| c.format = "yaml" } }
 
       it "creates a cassette file on use with yaml" do
@@ -210,7 +210,7 @@ RSpec.describe TCR do
       end
     end
 
-    context 'when configured for Marshal format' do
+    context "when configured for Marshal format" do
       before { TCR.configure { |c| c.format = "marshal" } }
 
       it "creates a cassette file on use with marshal" do
