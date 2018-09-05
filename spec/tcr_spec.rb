@@ -10,7 +10,7 @@ require 'thread'
 require "mail"
 
 
-describe TCR do
+RSpec.describe TCR do
   before(:each) do
     TCR.configuration.reset_defaults!
   end
@@ -165,57 +165,86 @@ describe TCR do
       expect(TCR.cassette).to be_nil
     end
 
-    it "creates a cassette file on use" do
-      expect {
-        TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-        end
-      }.to change{ File.exists?("./test.json") }.from(false).to(true)
-    end
-
-    it "creates a cassette file on use with yaml" do
-      TCR.configure { |c| c.format = "yaml" }
-
-      expect {
-        TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-        end
-      }.to change{ File.exists?("./test.yaml") }.from(false).to(true)
-    end
-
-    it "creates a cassette file on use with marshal" do
-      TCR.configure { |c| c.format = "marshal" }
-
-      expect {
-        TCR.use_cassette("test") do
-          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-        end
-      }.to change{ File.exists?("./test.marshal") }.from(false).to(true)
-    end
-
-    it "records the tcp session data into the file" do
-      TCR.use_cassette("test") do
-        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-        io = Net::InternetMessageIO.new(tcp_socket)
-        line = io.readline
-        tcp_socket.close
+    context "when configured for JSON format" do
+      it "creates a cassette file on use" do
+        expect {
+          TCR.use_cassette("test") do
+            tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          end
+        }.to change{ File.exists?("./test.json") }.from(false).to(true)
       end
-      cassette_contents = File.open("test.json") { |f| f.read }
-      cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+
+      it "records the tcp session data into the file" do
+        TCR.use_cassette("test") do
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          io = Net::InternetMessageIO.new(tcp_socket)
+          line = io.readline
+          tcp_socket.close
+        end
+        cassette_contents = File.open("test.json") { |f| f.read }
+        cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+      end
     end
 
-    it "records the tcp session data into the yaml file" do
-      TCR.configure { |c| c.format = "yaml" }
+    context "when configured for YAML format" do
+      before { TCR.configure { |c| c.format = "yaml" } }
 
-      TCR.use_cassette("test") do
-        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-        io = Net::InternetMessageIO.new(tcp_socket)
-        line = io.readline
-        tcp_socket.close
+      it "creates a cassette file on use with yaml" do
+        expect {
+          TCR.use_cassette("test") do
+            tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          end
+        }.to change{ File.exists?("./test.yaml") }.from(false).to(true)
       end
-      cassette_contents = File.open("test.yaml") { |f| f.read }
-      cassette_contents.include?("---").should == true
-      cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+
+      it "records the tcp session data into the yaml file" do
+        TCR.use_cassette("test") do
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          io = Net::InternetMessageIO.new(tcp_socket)
+          line = io.readline
+          tcp_socket.close
+        end
+        cassette_contents = File.open("test.yaml") { |f| f.read }
+        cassette_contents.include?("---").should == true
+        cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+      end
+    end
+
+    context "when configured for Marshal format" do
+      before { TCR.configure { |c| c.format = "marshal" } }
+
+      it "creates a cassette file on use with marshal" do
+        expect {
+          TCR.use_cassette("test") do
+            tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          end
+        }.to change{ File.exists?("./test.marshal") }.from(false).to(true)
+      end
+
+      it "records the tcp session data into the marshalled file" do
+        TCR.use_cassette("test") do
+          tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+          io = Net::InternetMessageIO.new(tcp_socket)
+          line = io.readline
+          tcp_socket.close
+        end
+        unmarshalled_cassette = Marshal.load(File.read("test.marshal"))
+        expect(unmarshalled_cassette).to be_a(Array)
+        expect(unmarshalled_cassette.first.last.last).to eq("220 smtp.mandrillapp.com ESMTP\r\n")
+      end
+
+      context "when Encoding.default_internal == Encoding::UTF_8 (as in Rails)" do
+        before { Encoding.default_internal = Encoding::UTF_8 }
+        let(:invalid_unicode_string) { "\u0001\u0001\u0004€" }
+
+        it "doesn't fail on cassettes with binary content" do
+          expect do
+            TCR.use_cassette("test") do
+              TCR.cassette.instance_variable_get(:@sessions) << ["read", invalid_unicode_string]
+            end
+          end.not_to raise_error
+        end
+      end
     end
 
     it "plays back tcp sessions without opening a real connection" do
