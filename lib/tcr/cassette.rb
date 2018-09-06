@@ -6,7 +6,6 @@ module TCR
 
     def initialize(name)
       @name = name
-      @sessions = recording? ? [] : unmarshal(File.read(filename))
 
       if recording?
         verify_cassette_path_is_writable
