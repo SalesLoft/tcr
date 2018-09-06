@@ -6,7 +6,6 @@ require "net/imap"
 require "net/smtp"
 require "net/ldap"
 require "tcr/net/ldap"
-require "thread"
 require "mail"
 
 
