@@ -25,54 +25,91 @@ RSpec.describe TCR do
   end
 
   describe ".configuration" do
-     it "has a default cassette location configured" do
-       TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
-     end
-
-     it "has an empty list of hook ports by default" do
-       TCR.configuration.hook_tcp_ports.should == []
-     end
-
-     it "defaults to erroring on read/write mismatch access" do
-       TCR.configuration.block_for_reads.should be_falsey
-     end
-
-     it "defaults to hit all to false" do
-       TCR.configuration.hit_all.should be_falsey
-     end
-   end
-
-  describe ".configure" do
-    it "configures cassette location" do
-      expect {
-        TCR.configure { |c| c.cassette_library_dir = "some/dir" }
-      }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
+    it "has a default cassette location configured" do
+      TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
     end
 
-    it "configures tcp ports to hook" do
-      expect {
-        TCR.configure { |c| c.hook_tcp_ports = [2525] }
-      }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([2525])
+    it "has an empty list of hook ports by default" do
+      TCR.configuration.hook_tcp_ports.should == []
     end
 
-    it "configures allowing a blocking read mode" do
-      expect {
-        TCR.configure { |c| c.block_for_reads = true }
-      }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
+    it "defaults to erroring on read/write mismatch access" do
+      TCR.configuration.block_for_reads.should be_falsey
     end
 
-    it "configures to check if all sesstions was hit" do
-      expect {
-        TCR.configure { |c| c.hit_all = true }
-      }.to change{ TCR.configuration.hit_all }.from(false).to(true)
+    it "defaults to hit all to false" do
+      TCR.configuration.hit_all.should be_falsey
     end
   end
 
-  it "raises an error if you connect to a hooked port without using a cassette" do
-    TCR.configure { |c| c.hook_tcp_ports = [2525] }
-    expect {
-      tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
-    }.to raise_error(TCR::NoCassetteError)
+  describe ".configure" do
+    context "with cassette_library_dir option" do
+      it "configures cassette location" do
+        expect {
+          TCR.configure { |c| c.cassette_library_dir = "some/dir" }
+        }.to change{ TCR.configuration.cassette_library_dir }.from("fixtures/tcr_cassettes").to("some/dir")
+      end
+    end
+
+    context "with hook_tcp_ports option" do
+      it "configures tcp ports to hook" do
+        expect {
+          TCR.configure { |c| c.hook_tcp_ports = [2525] }
+        }.to change{ TCR.configuration.hook_tcp_ports }.from([]).to([2525])
+      end
+    end
+
+    context "with block_for_reads option" do
+      before(:each) {
+        TCR.configure { |c|
+          c.hook_tcp_ports = [9999]
+          c.cassette_library_dir = '.'
+        }
+      }
+
+      it "configures allowing a blocking read mode" do
+        expect {
+          TCR.configure { |c| c.block_for_reads = true }
+        }.to change{ TCR.configuration.block_for_reads }.from(false).to(true)
+      end
+
+      it "blocks read thread until data is available instead of raising mismatch error" do
+        TCR.configure { |c| c.block_for_reads = true }
+        reads = Queue.new
+
+        TCR.use_cassette("spec/fixtures/block_for_reads") do
+          sock = TCPSocket.open("google.com", 9999)
+
+          t = Thread.new do
+            reads << sock.gets
+          end
+
+          expect(reads.size).to eq(0)
+          sock.print("hello\n")
+          t.value
+          expect(reads.size).to eq(1)
+        end
+      end
+
+      context "when disabled" do
+        it "raises mismatch error" do
+          TCR.use_cassette("spec/fixtures/block_for_reads") do
+            sock = TCPSocket.open("google.com", 9999)
+            expect {
+              Timeout::timeout(1) { sock.gets }
+            }.to raise_error(TCR::DirectionMismatchError)
+          end
+        end
+      end
+    end
+
+    context "with hit_all option" do
+      it "configures to check if all sessions were hit" do
+        expect {
+          TCR.configure { |c| c.hit_all = true }
+        }.to change{ TCR.configuration.hit_all }.from(false).to(true)
+      end
+    end
   end
 
   describe ".turned_off" do
@@ -98,44 +135,6 @@ RSpec.describe TCR do
     end
   end
 
-  describe "block_for_reads" do
-    before(:each) {
-      TCR.configure { |c|
-        c.hook_tcp_ports = [9999]
-        c.cassette_library_dir = '.'
-      }
-    }
-
-    it "blocks read thread until data is available instead of raising mismatch error" do
-      TCR.configure { |c| c.block_for_reads = true }
-      reads = Queue.new
-
-      TCR.use_cassette("spec/fixtures/block_for_reads") do
-        sock = TCPSocket.open("google.com", 9999)
-
-        t = Thread.new do
-          reads << sock.gets
-        end
-
-        expect(reads.size).to eq(0)
-        sock.print("hello\n")
-        t.value
-        expect(reads.size).to eq(1)
-      end
-    end
-
-    context "when disabled" do
-      it "raises mismatch error" do
-        TCR.use_cassette("spec/fixtures/block_for_reads") do
-          sock = TCPSocket.open("google.com", 9999)
-          expect {
-            Timeout::timeout(1) { sock.gets }
-          }.to raise_error(TCR::DirectionMismatchError)
-        end
-      end
-    end
-  end
-
   describe ".use_cassette" do
     before(:each) {
       TCR.configure { |c|
@@ -143,6 +142,13 @@ RSpec.describe TCR do
         c.cassette_library_dir = "."
       }
     }
+
+    it "MUST be used when connecting to hooked ports (or else raises an error)" do
+      TCR.configure { |c| c.hook_tcp_ports = [2525] }
+      expect {
+        tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
+      }.to raise_error(TCR::NoCassetteError)
+    end
 
     it "requires a block to call" do
       expect {
@@ -429,6 +435,32 @@ RSpec.describe TCR do
             smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
           end
         }.to raise_error(TCR::ExtraSessionsError)
+      end
+    end
+  end
+
+  context "when TCPSocket.open raises an error during recording" do
+    before do
+      TCR.configure { |c|
+        c.format = "yaml" # JSON borks on binary strings
+        c.hook_tcp_ports = [143]
+        c.cassette_library_dir = "."
+      }
+
+      # record cassette
+      TCR.use_cassette("test") do
+        expect { Net::IMAP.new(nil) }.to raise_error(Errno::ECONNREFUSED)
+      end
+    end
+
+    it "records error to cassette" do
+      expect(File.exist?('test.yaml')).to be(true)
+      expect(File.read('test.yaml')).not_to be_empty
+    end
+
+    it "re-raises the error during replay" do
+      TCR.use_cassette("test") do
+        expect { Net::IMAP.new(nil) }.to raise_error(Errno::ECONNREFUSED)
       end
     end
   end

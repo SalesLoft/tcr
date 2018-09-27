@@ -5,22 +5,26 @@ require 'thread'
 
 module TCR
   class RecordableTCPSocket
-    attr_reader :live, :socket
-    attr_accessor :recording
+    attr_reader :live, :socket, :recording
 
     def initialize(address, port, cassette)
       raise TCR::NoCassetteError.new unless TCR.cassette
 
       @read_lock = Queue.new
-
-      if cassette.recording?
-        @live = true
-        @socket = TCPSocket.real_open(address, port)
-      else
-        @live   = false
-        @closed = false
-      end
       @recording = cassette.next_session
+      @live = cassette.recording?
+
+      if live
+        begin
+          @socket = TCPSocket.real_open(address, port)
+        rescue => e
+          recording << ["error", Marshal.dump(e)]
+          raise
+        end
+      else
+        @closed = false
+        check_recording_for_errors
+      end
     end
 
     def read(bytes)
@@ -74,6 +78,10 @@ module TCR
     end
 
     private
+
+    def check_recording_for_errors
+      raise Marshal.load(recording.first.last) if recording.first.first == "error"
+    end
 
     def _intercept_socket
       if @socket
