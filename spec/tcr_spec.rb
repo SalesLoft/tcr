@@ -449,7 +449,7 @@ RSpec.describe TCR do
 
       # record cassette
       TCR.use_cassette("test") do
-        expect { Net::IMAP.new(nil) }.to raise_error(Errno::ECONNREFUSED)
+        expect { Net::IMAP.new(nil) }.to raise_error(SystemCallError)
       end
     end
 
@@ -460,7 +460,7 @@ RSpec.describe TCR do
 
     it "re-raises the error during replay" do
       TCR.use_cassette("test") do
-        expect { Net::IMAP.new(nil) }.to raise_error(Errno::ECONNREFUSED)
+        expect { Net::IMAP.new(nil) }.to raise_error(SystemCallError)
       end
     end
   end
