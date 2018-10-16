@@ -88,11 +88,11 @@ class Socket
   class << self
     alias_method :real_tcp, :tcp
 
-    def tcp(host, port, socket_opts)
+    def tcp(host, port, *socket_opts)
       if TCR.configuration.hook_tcp_ports.include?(port)
         TCR::RecordableTCPSocket.new(host, port, TCR.cassette)
       else
-        real_tcp(host, port, socket_opts)
+        real_tcp(host, port, *socket_opts)
       end
     end
   end
