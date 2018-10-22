@@ -440,7 +440,7 @@ RSpec.describe TCR do
     }
 
     TCR.use_cassette("test") do
-      sock = Socket.tcp("towel.blinkenlights.nl", 23, {})
+      sock = Socket.tcp("towel.blinkenlights.nl", 23)
       expect(sock).to be_a(TCR::RecordableTCPSocket)
     end
   end
