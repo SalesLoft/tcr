@@ -52,6 +52,17 @@ module TCR
       str.length
     end
 
+    def write_nonblock(str, *_rest)
+      write(str)
+    end
+
+    def ssl_version
+    end
+
+    def cipher
+      {}
+    end
+
     def to_io
       if live
         @socket.to_io

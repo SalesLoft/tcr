@@ -26,19 +26,19 @@ RSpec.describe TCR do
 
   describe ".configuration" do
     it "has a default cassette location configured" do
-      TCR.configuration.cassette_library_dir.should == "fixtures/tcr_cassettes"
+      expect(TCR.configuration.cassette_library_dir).to eq "fixtures/tcr_cassettes"
     end
 
     it "has an empty list of hook ports by default" do
-      TCR.configuration.hook_tcp_ports.should == []
+      expect(TCR.configuration.hook_tcp_ports).to eq []
     end
 
     it "defaults to erroring on read/write mismatch access" do
-      TCR.configuration.block_for_reads.should be_falsey
+      expect(TCR.configuration.block_for_reads).to be_falsey
     end
 
     it "defaults to hit all to false" do
-      TCR.configuration.hit_all.should be_falsey
+      expect(TCR.configuration.hit_all).to be_falsey
     end
   end
 
@@ -122,7 +122,7 @@ RSpec.describe TCR do
     it "disables hooks within the block" do
       TCR.configure { |c| c.hook_tcp_ports = [2525] }
       TCR.turned_off do
-        TCR.configuration.hook_tcp_ports.should == []
+        expect(TCR.configuration.hook_tcp_ports).to eq []
       end
     end
 
@@ -225,7 +225,7 @@ RSpec.describe TCR do
           tcp_socket.close
         end
         cassette_contents = File.open("test.json") { |f| f.read }
-        cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+        expect(cassette_contents.include?("220 smtp.mandrillapp.com ESMTP")).to be_truthy
       end
     end
 
@@ -248,8 +248,8 @@ RSpec.describe TCR do
           tcp_socket.close
         end
         cassette_contents = File.open("test.yaml") { |f| f.read }
-        cassette_contents.include?("---").should == true
-        cassette_contents.include?("220 smtp.mandrillapp.com ESMTP").should == true
+        expect(cassette_contents.include?("---")).to be_truthy
+        expect(cassette_contents.include?("220 smtp.mandrillapp.com ESMTP")).to be_truthy
       end
     end
 
@@ -296,7 +296,7 @@ RSpec.describe TCR do
       TCR.use_cassette("spec/fixtures/mandrill_smtp") do
         tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
         io = Net::InternetMessageIO.new(tcp_socket)
-        line = io.readline.should include("220 smtp.mandrillapp.com ESMTP")
+        expect(io.readline).to include("220 smtp.mandrillapp.com ESMTP")
       end
     end
 
@@ -374,19 +374,19 @@ RSpec.describe TCR do
           smtp.finish
         end
         cassette_contents = File.open("test.json") { |f| f.read }
-        cassette_contents.include?("smtp.mandrillapp.com ESMTP").should == true
-        cassette_contents.include?("mail.smtp2go.com ESMTP").should == true
+        expect(cassette_contents.include?("smtp.mandrillapp.com ESMTP")).to be_truthy
+        expect(cassette_contents.include?("mail.smtp2go.com ESMTP")).to be_truthy
       end
 
       it "plays back multiple sessions per cassette in order" do
         TCR.use_cassette("spec/fixtures/multitest") do
           tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           io = Net::InternetMessageIO.new(tcp_socket)
-          line = io.readline.should include("smtp.mandrillapp.com ESMTP")
+          expect(io.readline).to include("smtp.mandrillapp.com ESMTP")
 
           tcp_socket = TCPSocket.open("mail.smtp2go.com", 2525)
           io = Net::InternetMessageIO.new(tcp_socket)
-          line = io.readline.should include("mail.smtp2go.com ESMTP")
+          expect(io.readline).to include("mail.smtp2go.com ESMTP")
         end
       end
 
@@ -471,7 +471,7 @@ RSpec.describe TCR do
       c.cassette_library_dir = "."
     }
 
-    TCR.use_cassette("test") do
+    TCR.use_cassette("spec/fixtures/starwars_telnet") do
       sock = Socket.tcp("towel.blinkenlights.nl", 23)
       expect(sock).to be_a(TCR::RecordableTCPSocket)
     end
