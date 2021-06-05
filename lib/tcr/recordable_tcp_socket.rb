@@ -54,7 +54,8 @@ module TCR
     end
 
     def write_nonblock(str, *_rest)
-      write(str)
+      _write(:write_nonblock, str)
+      str.length
     end
 
     def ssl_version
