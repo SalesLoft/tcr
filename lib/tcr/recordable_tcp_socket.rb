@@ -13,6 +13,7 @@ module TCR
       @read_lock = []
       @recording = cassette.next_session
       @live = cassette.recording?
+      @config_block_for_reads = TCR.configuration.block_for_reads
 
       if live
         begin
@@ -90,6 +91,8 @@ module TCR
 
     private
 
+    attr_reader :config_block_for_reads
+
     def check_recording_for_errors
       raise Marshal.load(recording.first.last) if recording.first.first == "error"
     end
@@ -128,7 +131,7 @@ module TCR
           payload = data.dup if !data.is_a?(Symbol)
           recording << ["read", payload]
       else
-        _block_for_read_data if blocking && TCR.configuration.block_for_reads
+        _block_for_read_data if blocking && config_block_for_reads
         raise EOFError if recording.empty?
         direction, data = recording.shift
         _ensure_direction("read", direction)
