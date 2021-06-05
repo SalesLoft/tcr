@@ -515,4 +515,26 @@ RSpec.describe TCR do
       end
     }.not_to raise_error
   end
+
+  context 'Ractor' do
+    before do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [23]
+        c.cassette_library_dir = "."
+      }
+    end
+
+    it 'should be available in Ractors' do
+      next unless defined?(Ractor)
+
+      TCR.use_cassette("spec/fixtures/starwars_telnet") do
+        sock = Socket.tcp("towel.blinkenlights.nl", 23)
+        expect do
+          Ractor.new(sock) do |sock|
+            #noop
+          end
+        end.not_to raise_error
+      end
+    end
+  end
 end

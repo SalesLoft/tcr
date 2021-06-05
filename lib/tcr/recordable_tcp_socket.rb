@@ -10,7 +10,7 @@ module TCR
     def initialize(address, port, cassette)
       raise TCR::NoCassetteError.new unless TCR.cassette
 
-      @read_lock = Queue.new
+      @read_lock = []
       @recording = cassette.next_session
       @live = cassette.recording?
 
@@ -39,7 +39,7 @@ module TCR
       _read(:gets, *args)
     end
 
-    def read_nonblock(*args)
+    def read_nonblock(*args, **_rest)
       _read(:read_nonblock, *args, blocking: false)
     end
 
@@ -117,17 +117,12 @@ module TCR
         recording << ["write", data.dup]
       else
         direction, data = recording.shift
-        _ensure_direction("write", direction)
+        _ensure_direction("write", direction) if direction
         _check_for_blocked_reads
       end
     end
 
-    def _read(method, *args)
-      blocking = true
-      if args.last.is_a?(::Hash)
-        blocking = args.pop.fetch(:blocking, true)
-      end
-
+    def _read(method, *args, blocking: true)
       if live
           data    = @socket.__send__(method, *args)
           payload = data.dup if !data.is_a?(Symbol)
@@ -139,6 +134,8 @@ module TCR
         _ensure_direction("read", direction)
       end
       data
+    rescue IO::EAGAINWaitReadable, OpenSSL::SSL::SSLErrorWaitReadable
+      retry
     end
 
     def _ensure_direction(desired, actual)

@@ -10,21 +10,15 @@
     ],
     [
       "read",
-      "250-relay-5.us-east-1.relay-prod\r\n250-PIPELINING\r\n250-SIZE 26214400\r\n250-STARTTLS\r\n250-AUTH PLAIN LOGIN\r\n250-ENHANCEDSTATUSCODES\r\n250 8BITMIME\r\n"
+      "250-relay-4.eu-west-1.relay-prod\r\n250-PIPELINING\r\n250-SIZE 26214400\r\n250-STARTTLS\r\n250-AUTH PLAIN LOGIN\r\n250-ENHANCEDSTATUSCODES\r\n250-8BITMIME\r\n250 CHUNKING\r\n"
     ],
     [
       "write",
-      "QUIT\r\n"
+      "STARTTLS\r\n"
     ],
     [
       "read",
-      "221 2.0.0 Bye\r\n"
-    ]
-  ],
-  [
-    [
-      "read",
-      "220 mail.smtp2go.com ESMTP Exim 4.86 Wed, 02 Mar 2016 02:55:19 +0000\r\n"
+      "220 2.0.0 Ready to start TLS\r\n"
     ],
     [
       "write",
@@ -32,15 +26,11 @@
     ],
     [
       "read",
-      "250-mail.smtp2go.com Hello localhost [50.160.254.134]\r\n250-SIZE 52428800\r\n250-8BITMIME\r\n250-DSN\r\n250-PIPELINING\r\n250-AUTH CRAM-MD5 PLAIN LOGIN\r\n250-STARTTLS\r\n250-PRDR\r\n250 HELP\r\n"
-    ],
-    [
-      "write",
-      "QUIT\r\n"
-    ],
-    [
-      "read",
-      "221 mail.smtp2go.com closing connection\r\n"
+      "250-relay-4.eu-west-1.relay-prod\r\n250-PIPELINING\r\n250-SIZE 26214400\r\n250-AUTH PLAIN LOGIN\r\n250-ENHANCEDSTATUSCODES\r\n250-8BITMIME\r\n250 CHUNKING\r\n"
     ]
+  ],
+  [
+    "read",
+    "extra"
   ]
 ]
