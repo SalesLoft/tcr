@@ -52,6 +52,11 @@ module TCR
       str.length
     end
 
+    def write_nonblock(str, *args)
+      _write(:write_nonblock, str, *args)
+      str.length
+    end
+
     def to_io
       if live
         @socket.to_io
@@ -99,10 +104,10 @@ module TCR
       @read_lock << 1
     end
 
-    def _write(method, data)
+    def _write(method, data, *args)
       if live
         payload = data.dup if !data.is_a?(Symbol)
-        @socket.__send__(method, payload)
+        @socket.__send__(method, payload, *args)
         recording << ["write", data.dup]
       else
         direction, data = recording.shift
@@ -144,6 +149,14 @@ module TCR
         socket.connect
         socket
       end
+    end
+
+    def ssl_version
+      ""
+    end
+
+    def cipher
+      []
     end
 
     def sync_close=(arg)
