@@ -422,9 +422,9 @@ RSpec.describe TCR do
       it "raises an error if you try to playback more sessions than you previously recorded" do
         expect {
           TCR.use_cassette("spec/fixtures/multitest-smtp") do
-            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
-            smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
-            smtp = Net::SMTP.start("mail.smtp2go.com", 2525)
+            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525, starttls: false)
+            smtp = Net::SMTP.start("mail.smtp2go.com", 2525, starttls: false)
+            smtp = Net::SMTP.start("mail.smtp2go.com", 2525, starttls: false)
           end
         }.to raise_error(TCR::NoMoreSessionsError)
       end
@@ -432,7 +432,7 @@ RSpec.describe TCR do
       it "raises an error if you try to playback less sessions than you previously recorded" do
         expect {
           TCR.use_cassette("spec/fixtures/multitest-extra-smtp", hit_all: true) do
-            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525)
+            smtp = Net::SMTP.start("smtp.mandrillapp.com", 2525, starttls: false)
           end
         }.to raise_error(TCR::ExtraSessionsError)
       end

@@ -27,28 +27,33 @@ module TCR
       end
     end
 
-    def read(bytes)
-      _read(:read, bytes)
+    def read(*args)
+      _read(:read, args)
     end
 
     def getc(*args)
-      _read(:getc, *args)
+      _read(:getc, args)
     end
 
     def gets(*args)
-      _read(:gets, *args)
+      _read(:gets, args)
     end
 
     def read_nonblock(*args)
-      _read(:read_nonblock, *args, blocking: false)
+      _read(:read_nonblock, args, blocking: false)
     end
 
-    def print(str)
-      _write(:print, str)
+    def print(str, *args)
+      _write(:print, str, args)
     end
 
-    def write(str)
-      _write(:write, str)
+    def write(str, *args)
+      _write(:write, str, args)
+      str.length
+    end
+
+    def write_nonblock(str, *args)
+      _write(:write_nonblock, str, args)
       str.length
     end
 
@@ -99,10 +104,10 @@ module TCR
       @read_lock << 1
     end
 
-    def _write(method, data)
+    def _write(method, data, args)
       if live
         payload = data.dup if !data.is_a?(Symbol)
-        @socket.__send__(method, payload)
+        _delegate_call(method, args.unshift(payload))
         recording << ["write", data.dup]
       else
         direction, data = recording.shift
@@ -111,14 +116,11 @@ module TCR
       end
     end
 
-    def _read(method, *args)
-      blocking = true
-      if args.last.is_a?(::Hash)
-        blocking = args.pop.fetch(:blocking, true)
-      end
+    def _read(method, args, opts = {})
+      blocking = opts.fetch(:blocking, true)
 
       if live
-          data    = @socket.__send__(method, *args)
+          data    = _delegate_call(method, args)
           payload = data.dup if !data.is_a?(Symbol)
           recording << ["read", payload]
       else
@@ -128,6 +130,15 @@ module TCR
         _ensure_direction("read", direction)
       end
       data
+    end
+
+    def _delegate_call(method, args)
+      if RUBY_VERSION >= "2.7" && Hash === args.last
+        kwargs = args.pop
+        @socket.__send__(method, *args, **kwargs)
+      else
+        @socket.__send__(method, *args)
+      end
     end
 
     def _ensure_direction(desired, actual)
@@ -144,6 +155,14 @@ module TCR
         socket.connect
         socket
       end
+    end
+
+    def ssl_version
+      ""
+    end
+
+    def cipher
+      []
     end
 
     def sync_close=(arg)
@@ -167,6 +186,9 @@ module TCR
     end
 
     def session=(args)
+    end
+
+    def hostname=(args)
     end
 
     def io
