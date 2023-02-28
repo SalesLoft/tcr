@@ -1,0 +1,47 @@
+name: TCR Spec Suite
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby:
+          - "2.0.0"
+          - "2.1.9"
+          - "2.2.10"
+          - "2.3.7"
+          - "2.4.4"
+          - "2.5.1"
+          - "2.7.3"
+          - "3.0.1"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Initial setup
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Run tests
+        run: bundle exec rspec
+
+  testall:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Test (matrix)
+    needs: [test]
+    steps:
+      - name: Check status of all test runs
+        if: ${{ needs.test.result != 'success' }}
+        run: exit 1
