@@ -467,12 +467,12 @@ RSpec.describe TCR do
 
   it "replaces sockets created with Socket.tcp" do
     TCR.configure { |c|
-      c.hook_tcp_ports = [23]
+      c.hook_tcp_ports = [80]
       c.cassette_library_dir = "."
     }
 
     TCR.use_cassette("test") do
-      sock = Socket.tcp("towel.blinkenlights.nl", 23)
+      sock = Socket.tcp("google.com", 80)
       expect(sock).to be_a(TCR::RecordableTCPSocket)
     end
   end
