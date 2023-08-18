@@ -15,13 +15,13 @@ RSpec.describe TCR do
   end
 
   around(:each) do |example|
-    File.unlink("test.json") if File.exists?("test.json")
-    File.unlink("test.yaml") if File.exists?("test.yaml")
-    File.unlink("test.marshal") if File.exists?("test.marshal")
+    File.unlink("test.json") if File.exist?("test.json")
+    File.unlink("test.yaml") if File.exist?("test.yaml")
+    File.unlink("test.marshal") if File.exist?("test.marshal")
     example.run
-    File.unlink("test.json") if File.exists?("test.json")
-    File.unlink("test.yaml") if File.exists?("test.yaml")
-    File.unlink("test.marshal") if File.exists?("test.marshal")
+    File.unlink("test.json") if File.exist?("test.json")
+    File.unlink("test.yaml") if File.exist?("test.yaml")
+    File.unlink("test.marshal") if File.exist?("test.marshal")
   end
 
   describe ".configuration" do
@@ -214,7 +214,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.json") }.from(false).to(true)
+        }.to change{ File.exist?("./test.json") }.from(false).to(true)
       end
 
       it "records the tcp session data into the file" do
@@ -237,7 +237,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.yaml") }.from(false).to(true)
+        }.to change{ File.exist?("./test.yaml") }.from(false).to(true)
       end
 
       it "records the tcp session data into the yaml file" do
@@ -261,7 +261,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.marshal") }.from(false).to(true)
+        }.to change{ File.exist?("./test.marshal") }.from(false).to(true)
       end
 
       it "records the tcp session data into the marshalled file" do
