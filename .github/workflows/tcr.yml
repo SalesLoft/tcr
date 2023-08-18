@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.ruby == '2.2.10' && 'ubuntu-20.04' || 'ubuntu-latest' }}
 
     strategy:
       matrix:
@@ -38,7 +38,7 @@ jobs:
 
   testall:
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.ruby == '2.2.10' && 'ubuntu-20.04' || 'ubuntu-latest' }}
     name: Test (matrix)
     needs: [test]
     steps:
