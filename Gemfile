@@ -1,4 +1,10 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in tcr.gemspec
+gem "rspec"
+gem "mail"
+gem "net-ldap"
+gem "mime-types"
+gem "geminabox"
+gem "appraisal"
+
 gemspec
