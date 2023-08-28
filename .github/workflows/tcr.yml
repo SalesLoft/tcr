@@ -28,3 +28,13 @@ jobs:
         run: ruby --version
       - name: Run Tests
         run: bundle exec rspec
+
+  testall:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Test (matrix)
+    needs: [test]
+    steps:
+      - name: Check status of all test runs
+        if: ${{ needs.test.result != 'success' }}
+        run: exit 1
