@@ -16,7 +16,7 @@ module TCR
     end
 
     def recording?
-      @recording ||= !File.exists?(filename)
+      @recording ||= !File.exist?(filename)
     end
 
     def next_session
