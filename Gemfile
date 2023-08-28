@@ -5,6 +5,5 @@ gem "mail"
 gem "net-ldap"
 gem "mime-types"
 gem "geminabox"
-gem "appraisal"
 
 gemspec
