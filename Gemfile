@@ -1,4 +1,8 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-# Specify your gem's dependencies in tcr.gemspec
 gemspec
+
+gem "rspec"
+gem "mail"
+gem "net-ldap"
+gem "mime-types"
