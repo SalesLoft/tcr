@@ -1,9 +1,8 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
+
+gemspec
 
 gem "rspec"
 gem "mail"
 gem "net-ldap"
 gem "mime-types"
-gem "geminabox"
-
-gemspec

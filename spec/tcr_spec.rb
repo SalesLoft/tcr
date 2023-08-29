@@ -15,13 +15,13 @@ RSpec.describe TCR do
   end
 
   around(:each) do |example|
-    File.unlink("test.json") if File.exists?("test.json")
-    File.unlink("test.yaml") if File.exists?("test.yaml")
-    File.unlink("test.marshal") if File.exists?("test.marshal")
+    File.unlink("test.json") if File.exist?("test.json")
+    File.unlink("test.yaml") if File.exist?("test.yaml")
+    File.unlink("test.marshal") if File.exist?("test.marshal")
     example.run
-    File.unlink("test.json") if File.exists?("test.json")
-    File.unlink("test.yaml") if File.exists?("test.yaml")
-    File.unlink("test.marshal") if File.exists?("test.marshal")
+    File.unlink("test.json") if File.exist?("test.json")
+    File.unlink("test.yaml") if File.exist?("test.yaml")
+    File.unlink("test.marshal") if File.exist?("test.marshal")
   end
 
   describe ".configuration" do
@@ -119,6 +119,10 @@ RSpec.describe TCR do
       }.to raise_error(ArgumentError)
     end
 
+    it "returns the value" do
+      expect(TCR.turned_off { :foobar }).to eq(:foobar)
+    end
+
     it "disables hooks within the block" do
       TCR.configure { |c| c.hook_tcp_ports = [2525] }
       TCR.turned_off do
@@ -148,6 +152,10 @@ RSpec.describe TCR do
       expect {
         tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
       }.to raise_error(TCR::NoCassetteError)
+    end
+
+    it "returns the value" do
+      expect(TCR.use_cassette("test") { :foobar }).to eq(:foobar)
     end
 
     it "requires a block to call" do
@@ -214,7 +222,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.json") }.from(false).to(true)
+        }.to change{ File.exist?("./test.json") }.from(false).to(true)
       end
 
       it "records the tcp session data into the file" do
@@ -237,7 +245,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.yaml") }.from(false).to(true)
+        }.to change{ File.exist?("./test.yaml") }.from(false).to(true)
       end
 
       it "records the tcp session data into the yaml file" do
@@ -261,7 +269,7 @@ RSpec.describe TCR do
           TCR.use_cassette("test") do
             tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
           end
-        }.to change{ File.exists?("./test.marshal") }.from(false).to(true)
+        }.to change{ File.exist?("./test.marshal") }.from(false).to(true)
       end
 
       it "records the tcp session data into the marshalled file" do
