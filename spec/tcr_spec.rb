@@ -119,6 +119,10 @@ RSpec.describe TCR do
       }.to raise_error(ArgumentError)
     end
 
+    it "returns the value" do
+      expect(TCR.turned_off { :foobar }).to eq(:foobar)
+    end
+
     it "disables hooks within the block" do
       TCR.configure { |c| c.hook_tcp_ports = [2525] }
       TCR.turned_off do
@@ -148,6 +152,10 @@ RSpec.describe TCR do
       expect {
         tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
       }.to raise_error(TCR::NoCassetteError)
+    end
+
+    it "returns the value" do
+      expect(TCR.use_cassette("test") { :foobar }).to eq(:foobar)
     end
 
     it "requires a block to call" do
