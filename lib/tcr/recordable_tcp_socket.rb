@@ -5,41 +5,55 @@ require 'thread'
 
 module TCR
   class RecordableTCPSocket
-    attr_reader :live, :socket
-    attr_accessor :recording
+    attr_reader :live, :socket, :recording
 
     def initialize(address, port, cassette)
       raise TCR::NoCassetteError.new unless TCR.cassette
 
       @read_lock = Queue.new
-
-      if cassette.recording?
-        @live = true
-        @socket = TCPSocket.real_open(address, port)
-      else
-        @live = false
-      end
       @recording = cassette.next_session
+      @live = cassette.recording?
+
+      if live
+        begin
+          @socket = TCPSocket.real_open(address, port)
+        rescue => e
+          recording << ["error", Marshal.dump(e)]
+          raise
+        end
+      else
+        @closed = false
+        check_recording_for_errors
+      end
     end
 
-    def read(bytes)
-      _read(:read, bytes)
+    def read(*args)
+      _read(:read, args)
+    end
+
+    def getc(*args)
+      _read(:getc, args)
     end
 
     def gets(*args)
-      _read(:gets, *args)
+      _read(:gets, args)
     end
 
     def read_nonblock(*args)
-      _read(:read_nonblock, *args, blocking: false)
+      _read(:read_nonblock, args, blocking: false)
     end
 
-    def print(str)
-      _write(:print, str)
+    def print(str, *args)
+      _write(:print, str, args)
     end
 
-    def write(str)
-      _write(:write, str)
+    def write(str, *args)
+      _write(:write, str, args)
+      str.length
+    end
+
+    def write_nonblock(str, *args)
+      _write(:write_nonblock, str, args)
       str.length
     end
 
@@ -53,13 +67,15 @@ module TCR
       if live
         @socket.closed?
       else
-        false
+        @closed
       end
     end
 
     def close
       if live
         @socket.close
+      else
+        @closed = true
       end
     end
 
@@ -67,6 +83,10 @@ module TCR
     end
 
     private
+
+    def check_recording_for_errors
+      raise Marshal.load(recording.first.last) if recording.first.first == "error"
+    end
 
     def _intercept_socket
       if @socket
@@ -84,10 +104,11 @@ module TCR
       @read_lock << 1
     end
 
-    def _write(method, data)
+    def _write(method, data, args)
       if live
-        @socket.__send__(method, data)
-        recording << ["write", data]
+        payload = data.dup if !data.is_a?(Symbol)
+        _delegate_call(method, args.unshift(payload))
+        recording << ["write", data.dup]
       else
         direction, data = recording.shift
         _ensure_direction("write", direction)
@@ -95,15 +116,13 @@ module TCR
       end
     end
 
-    def _read(method, *args)
-      blocking = true
-      if args.last.is_a?(::Hash)
-        blocking = args.pop.fetch(:blocking, true)
-      end
+    def _read(method, args, opts = {})
+      blocking = opts.fetch(:blocking, true)
 
       if live
-          data = @socket.__send__(method, *args)
-          recording << ["read", data]
+          data    = _delegate_call(method, args)
+          payload = data.dup if !data.is_a?(Symbol)
+          recording << ["read", payload]
       else
         _block_for_read_data if blocking && TCR.configuration.block_for_reads
         raise EOFError if recording.empty?
@@ -111,6 +130,15 @@ module TCR
         _ensure_direction("read", direction)
       end
       data
+    end
+
+    def _delegate_call(method, args)
+      if RUBY_VERSION >= "2.7" && Hash === args.last
+        kwargs = args.pop
+        @socket.__send__(method, *args, **kwargs)
+      else
+        @socket.__send__(method, *args)
+      end
     end
 
     def _ensure_direction(desired, actual)
@@ -127,6 +155,14 @@ module TCR
         socket.connect
         socket
       end
+    end
+
+    def ssl_version
+      ""
+    end
+
+    def cipher
+      []
     end
 
     def sync_close=(arg)
@@ -150,6 +186,9 @@ module TCR
     end
 
     def session=(args)
+    end
+
+    def hostname=(args)
     end
 
     def io

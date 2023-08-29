@@ -42,6 +42,7 @@ module TCR
     TCR.cassette = Cassette.new(name)
     ret_val = yield
     TCR.cassette.save
+    TCR.cassette.check_hits_all_sessions if options[:hit_all] || configuration.hit_all
     ret_val
   ensure
     TCR.cassette = nil
@@ -80,6 +81,20 @@ class OpenSSL::SSL::SSLSocket
         TCR::RecordableSSLSocket.new(io)
       else
         super
+      end
+    end
+  end
+end
+
+class Socket
+  class << self
+    alias_method :real_tcp, :tcp
+
+    def tcp(host, port, *socket_opts)
+      if TCR.configuration.hook_tcp_ports.include?(port)
+        TCR::RecordableTCPSocket.new(host, port, TCR.cassette)
+      else
+        real_tcp(host, port, *socket_opts)
       end
     end
   end

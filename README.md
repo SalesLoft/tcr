@@ -1,12 +1,12 @@
 # TCR (TCP + VCR)
 
-[![Build Status](https://travis-ci.org/robforman/tcr.png?branch=master)](https://travis-ci.org/robforman/tcr)
+![Build Status](https://github.com/SalesLoft/tcr/actions/workflows/tcr.yml/badge.svg)
 
 
 
 TCR is a *very* lightweight version of [VCR](https://github.com/vcr/vcr) for TCP sockets.
 
-Currently used for recording 'net/smtp' interactions so only a few of the TCPSocket methods are recorded out.
+Currently used for recording 'net/smtp', 'net/imap' and 'net/ldap' interactions so only a few of the TCPSocket methods are recorded out.
 
 ## Installation
 
@@ -66,6 +66,46 @@ TCR.turned_off do
   tcp_socket = TCPSocket.open("smtp.mandrillapp.com", 2525)
 end
 ```
+
+To make sure all external calls really happened use `hit_all` option:
+
+```ruby
+class TCRTest < Test::Unit::TestCase
+  def test_example_dot_com
+    TCR.use_cassette('mandrill_smtp', hit_all: true) do
+      # There are previously recorded external calls.
+      # ExtraSessionsError will be raised as a result.
+    end
+  end
+end
+```
+
+You can also use the configuration option:
+
+```ruby
+TCR.configure do |c|
+  c.hit_all = true
+end
+```
+
+The following storage formats are supported:
+
+- JSON (default)
+- YAML
+- Marshal (recommended for binary data transfer like LDAP)
+
+You can configure them via:
+
+```ruby
+TCR.configure do |c|
+  c.format = 'json'
+  # or
+  c.format = 'yaml'
+  # or
+  c.format = 'marshal'
+end
+```
+
 
 ## Contributing
 
