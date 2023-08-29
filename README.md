@@ -1,6 +1,6 @@
 # TCR (TCP + VCR)
 
-[![Build Status](https://travis-ci.org/robforman/tcr.png?branch=master)](https://travis-ci.org/robforman/tcr)
+![Build Status](https://github.com/SalesLoft/tcr/actions/workflows/tcr.yml/badge.svg)
 
 
 
