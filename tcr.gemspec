@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
   gem.description   = %q{TCR is a lightweight VCR for TCP sockets.}
   gem.summary       = %q{TCR is a lightweight VCR for TCP sockets.}
   gem.homepage      = ""
+  gem.required_ruby_version = ">= 2.7"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
