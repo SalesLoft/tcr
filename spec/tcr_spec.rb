@@ -523,4 +523,18 @@ RSpec.describe TCR do
       end
     }.not_to raise_error
   end
+
+  context "when port is not in hook_tcp_ports" do
+    it "it honors Socket.tcp keyword arguments" do
+      TCR.configure { |c|
+        c.hook_tcp_ports = [8080]
+        c.cassette_library_dir = "."
+      }
+
+      TCR.use_cassette("test") do
+        sock = Socket.tcp("google.com", 80, connect_timeout: 1, resolv_timeout: 1)
+        expect(sock).to be_a(Socket)
+      end
+    end
+  end
 end
