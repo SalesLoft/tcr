@@ -4,6 +4,6 @@ gemspec
 
 gem "rspec"
 gem "mail"
-gem "net-imap", "0.2.2"
+gem "net-imap", "0.5.2"
 gem "net-ldap"
 gem "mime-types"
